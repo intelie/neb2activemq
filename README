@@ -1,0 +1,5 @@
+This project is composed of two separated systems.
+
+The first uses Nagios Event Broker to collect service checks data and send this info through IPC using a UNIX message queue. This was written in C.
+
+The second reads from a message queue, parse the messages to a JSON event, and, via STOMP protocol, sends to Activemq queue. This was written in Python.
