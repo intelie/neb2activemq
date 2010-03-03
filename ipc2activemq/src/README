@@ -1,0 +1,7 @@
+
+
+## System configurations
+
+This is the nebpublihser daemon.
+
+Make sure you have nagios with neb2mq running before stat daemon
