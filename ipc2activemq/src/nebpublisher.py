@@ -18,6 +18,7 @@ def main():
     conf_dir = os.path.join( os.path.abspath(os.path.dirname(__file__)), "nebpublisher/conf/" + ENV )
     settings_path = os.path.join(conf_dir, "settings.py")
     topics_path = os.path.join(conf_dir, "topics.py")
+    parser_functions_path = os.path.join(conf_dir, "parser_functions.py")
 
     #read settings
     fin = open(settings_path, 'rb')
@@ -27,9 +28,11 @@ def main():
     #read topics
     fin = open(topics_path, 'rb')
     topics = imp.load_source("topics", topics_path, fin)
+    fin = open(parser_functions_path, 'rb')
+    parser_functions = imp.load_source("parser_functions", parser_functions_path, fin)
 
     #run manager with defined settings
-    def main_fn(): manager.Manager(settings, topics)
+    def main_fn(): manager.Manager(settings, topics, parser_functions)
     if DAEMON:
         run_as_daemon(main_fn, PIDFILE)
     else:

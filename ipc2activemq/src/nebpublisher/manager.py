@@ -42,11 +42,12 @@ class Manager(object):
          - OS message queue subscriber and parses (Subscriber)
          - Actimq sender via stomp (QueueProcessor)
     """    
-    def __init__(self, settings, topics):
+    def __init__(self, settings, topics, parser_functions):
         logger.debug("Initiating Manager")
         
         self.settings = settings
         self.topics = topics
+        self.parser_functions = parser_functions
         
         #queue to send results to broker
         self.queue = Queue.Queue(settings.MAX_QUEUE_SIZE)   
@@ -59,10 +60,10 @@ class Manager(object):
           exit(1)
             
         #start execution      
-        self.parser = parser.Parser(topics)  
+        self.parser = parser.Parser(self.topics, self.parser_functions)  
         self.subscriber = Subscriber("subscriber", self.mq, settings, self.parser, self.queue).start();                   
           
-        self.processor = QueueProcessor(self.queue, settings)
+        self.processor = QueueProcessor(self.queue, self.settings)
 
         #main thread will be processing
         self.processor.process()
@@ -102,10 +103,11 @@ class Subscriber(threading.Thread):
         
         logger.debug("Message received. Type: %i Message: %s" %(type, str(message)))
 
-        event = self.parser.parse(type, str(message))
+        events = self.parser.parse(type, str(message))
 
-        if(event != parser.NOT_IMPLEMENTED and event != parser.BAD_FORMAT):
-          self.publish(event)
+        if (events != parser.NOT_IMPLEMENTED and events != parser.BAD_FORMAT):
+          for event in events:
+            self.publish(event)
 
         if (PROFILE_MEM ):
           if (time.time() > time_ref + interval):

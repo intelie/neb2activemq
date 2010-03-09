@@ -255,23 +255,5 @@ expressions = {
            }]
 
           }
-        ],
-	'check_passive' : [
-           {
-            'labelFilter' : 'votos',
-            'eventtype' : 'Votos',
-            'regexps' : [{
-              'properties' : ['quantidade'],
-              'regexp' : r"votos=(\d+)"
-              }]
-            },
-            {
-              'labelFilter': None,
-              'eventtype': 'FMS',
-              'regexps' : [{
-                'properties' : ['gcom/live', 'gnews/live', 'gsat/live1', 'gsat/live2', 'gsat/live3', 'g1rj1/live', 'g1sp1/live', 'bbb/pgma', 'bbb/pgmb', 'bbb/cam1', 'bbb/cam2', 'bbb/cam3', 'bbb/cam4', 'bbb/cam5', 'chat/dwt', 'chat/pjc', 'chat/ber1', 'chat/ber2', 'chat/cgj'],
-                'regexp': r"gcom/live:(\d+) gnews/live:(\d+) gsat/live1:(\d+) gsat/live2:(\d+) gsat/live3:(\d+) g1rj1/live:(\d+) g1sp1/live:(\d+) bbb/pgma:(\d+) bbb/pgmb:(\d+) bbb/cam1:(\d+) bbb/cam2:(\d+) bbb/cam3:(\d+) bbb/cam4:(\d+) bbb/cam5:(\d+) chat/dwt:(\d+) chat/pjc:(\d+) chat/ber1:(\d+) chat/ber2:(\d+) chat/cgj:(\d+)"
-              }]
-            }
         ]
 }

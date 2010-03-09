@@ -19,9 +19,10 @@ def count_not_none(groups) :
 
 class Parser():
   
-  def __init__ (self, topics):
+  def __init__ (self, topics, parser_functions):
     self.load_types()
     self.topics = topics
+    self.parser_functions = parser_functions
     
     # this code was made to compile the regexps only once
   
@@ -71,27 +72,39 @@ class Parser():
  
   def parse_service_check(self, message):
     if message == None:
-        return BAD_FORMAT
+      return BAD_FORMAT
 
     logger.debug("Message %s - service check" % message)
     data = []
     data = message.split('^')
 
     if len(data) < 4:
-        return BAD_FORMAT
-    if len(data[0]) == 0 or len(data[1]) == 0  or len(data[2]) == 0 or len(data[3]) == 0:
-        return BAD_FORMAT
+      return BAD_FORMAT
 
-    logger.debug("Host %s - command_name %s - state %s - output %s" %(data[0],data[1],data[2],data[3]))
+    host = data[0]
+    command_name = data[1]
+    status = data[2]
+    message = data[3]
 
-    if data[1] not in self.topics.expressions:
-        logger.warn("Event type %s not registered as a topic" %(data[1]))
-        return BAD_FORMAT
+    if len(host) == 0 or len(command_name) == 0  or len(status) == 0 or len(message) == 0:
+      return BAD_FORMAT
+
+    logger.debug("Host %s - command_name %s - state %s - output %s" %(host, command_name, status, message))
+
+    if command_name in self.topics.expressions:        
+      topic = self.topics.expressions[command_name]
+      result = self.create_event_from_regexp(host, message, topic)
+      if result != BAD_FORMAT:
+        return [result]
+      return result
+      
+    elif command_name in self.parser_functions.commands:
+      command_parser_functions = self.parser_functions.commands[command_name]
+      events = self.create_events_from_parser_functions(host, message, command_parser_functions)
+      return events
     
-    topic = self.topics.expressions[data[1]]
-    event = self.create_event_from_regexp(data[0], data[3], topic)
-
-    return event
+    logger.warn("Event type %s not registered as a topic" %(command_name))
+    return BAD_FORMAT
   
   def create_event_from_regexp(self, host, message, topic):
     event = {'host' : host}
@@ -131,6 +144,9 @@ class Parser():
                 i = i + 1
             # stop iterating over subitem
             break
+
+            
+            
       
     logger.debug('event: %s' % str(event))
     if match == True:
@@ -138,3 +154,11 @@ class Parser():
     else:
       logger.warn('No expression for: %s' %(message))
       return BAD_FORMAT
+      
+  def create_events_from_parser_functions(self, host, message, command_parser_functions):
+    for parser_function_struct in command_parser_functions:
+      if parser_function_struct['labelFilter'] == None or not message.startswith(parser_function_struct['labelFilter']):
+        logger.debug("Does not match with label")
+      else:
+        events = parser_function_struct['function'](message, parser_function_struct['eventtype'], parser_function_struct['labelFilter'])
+        return events
