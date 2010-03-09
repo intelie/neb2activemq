@@ -1,3 +1,4 @@
+
 This project is composed of two separated systems.
 
 The first uses Nagios Event Broker to collect service checks data and send this info through IPC using a UNIX message queue. This was written in C.
