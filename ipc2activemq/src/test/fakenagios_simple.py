@@ -97,7 +97,6 @@ def send_message(mq,option):
   elif option == 5:
     message = str('srvvld58^%s' %testes['srvvld48Critical'])
     mq.send(message, type = 14)
-  print message
     
   
   
