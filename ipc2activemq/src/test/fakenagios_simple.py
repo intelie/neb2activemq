@@ -22,8 +22,7 @@ testes = {'diskOk' : 'Disk space OK - 8899052 kB free ( 39 % used)',
         'smtpCritical' : 'SMTP CRITICAL - 0.550 sec. response time',        
         'srvvld48Ok' : 'FPING OK - srvvld48.test.com (loss=0%, rta=1.010000 ms)',
         'srvvld48Warning' : 'FPING WARNING - srvvld48.globoi.com (loss=0%, rta=0.560000 ms)',
-        'srvvld48Critical' : 'FPING CRITICAL - srvvld48.test.com (loss=100% )'
-        
+        'srvvld48Critical' : 'FPING CRITICAL - srvvld48.test.com (loss=100% )'   
 }
 
 
@@ -98,7 +97,7 @@ def send_message(mq,option):
   elif option == 5:
     message = str('srvvld58^%s' %testes['srvvld48Critical'])
     mq.send(message, type = 14)
-    
+  print message
     
   
   

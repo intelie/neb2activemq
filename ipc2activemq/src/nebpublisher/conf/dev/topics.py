@@ -1,3 +1,7 @@
+
+
+#Defines topics of interests to log from nagios and their regexps
+
 errorRegexps = [
   {
     'properties' : ['state'],
@@ -42,11 +46,23 @@ expressions = {
         'labelFilter': 'Load',
         'eventtype' : 'Load',
         'regexps' : [{
-                     'properties' : ['state', '1min', '5min', '15min'],
+                     'properties' : ['state', 'min1', 'min5', 'min15'],
                      'regexp' : r"Load average (OK|WARNING|CRITICAL) - \*?(\d+)\*? \*?(\d+)\*? \*?(\d+)\*?"
                    }]
         }
 				],
+				
+				'check_memory' : [
+  				{
+          'labelFilter': 'Memory',
+          'eventtype' : 'Memory',
+          'regexps' : [{
+                       'properties' : ['state', 'free', 'used'],
+                       'regexp' : r"Memory RAM (OK|WARNING|CRITICAL) - (\d+) kB free \( \*?(\d+)\*? kB used\)"
+                     }]
+          }
+  				],
+  				
 			'check_swap' : [
 				{
 					'labelFilter': 'Swap',
@@ -63,7 +79,7 @@ expressions = {
 	        'eventtype' : 'HTTP',
 	        'regexps' : [{
 	                     'properties' : ['state', 'status_code', 'response_time'],
-	                     'regexp' : r"HTTP (OK) -? ?HTTP/1\.1 (\d+) .+ - (\d+.\d+) seconds? response time"
+			     'regexp' : r"HTTP (OK) -? ?HTTP/1\.1 (\d+) .+ - (?:\d+ bytes in )?(\d+.\d+).*"
 	                   },
 										{
 											'properties' : ['state', 'status_code'],
@@ -211,5 +227,33 @@ expressions = {
               'regexp' : r"(OK|WARNING|CRITICAL) - Slave sql"
               }]
             }
+        ],
+	'check_snmp' : [
+          {
+            'labelFilter' : 'hit_ratio',
+            'eventtype': 'CachosHitRatio',
+            'regexps' : [{
+               'properties' : ['state','hit_ratio'],
+               'regexp' : r"hit_ratio (OK|WARNING|CRITICAL) - (\d+).*"
+           }]
+          },
+ 	{
+            'labelFilter' : 'cache_miss',
+            'eventtype': 'CachosCacheMiss',
+            'regexps' : [{
+               'properties' : ['state','cache_miss'],
+               'regexp' : r"cache_miss (OK|WARNING|CRITICAL) - (\d+).*"
+           }]
+
+          },
+ 	{
+            'labelFilter' : 'cache_hit',
+            'eventtype': 'CachosCacheHit',
+            'regexps' : [{
+               'properties' : ['state','cache_hit'],
+               'regexp' : r"cache_hit (OK|WARNING|CRITICAL) - (\d+).*"
+           }]
+
+          }
         ]
 }
