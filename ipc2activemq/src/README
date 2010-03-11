@@ -4,4 +4,8 @@
 
 This is the nebpublihser daemon.
 
-Make sure you have nagios with neb2mq running before stat daemon
+ipc2activemq requires stomppy 2.3. 
+ Download http://stomppy.googlecode.com/files/stomp.py-2.3.tar.gz, 
+ extract and install with sudo python setup.py install.
+
+Make sure you have nagios with neb2mq running before start daemon.
