@@ -3,7 +3,7 @@ import unittest
 import imp
 
 sys.path.append('../../')
-from src.nebpublisher.utils.parser import *
+from src.nebpublisher.utils.neb_parser import *
 
 class TestServiceParser(unittest.TestCase):
     def setUp(self):

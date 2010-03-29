@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from threading import Thread
-import stomp
-import sys, time, logging
 import types
+import stomp
+import sys
+import time
+import logging
 import Queue
 import inspect
 import threading
@@ -11,13 +12,21 @@ import time
 import socket
 import copy
 import json
-from utils import parser
+from utils import neb_parser
 
-#TODO Move this to settings or to a environment option 
+#TODO Move this to settings or to an environment option 
 PROFILE_MEM=False
 
 logger = logging.getLogger("nebpublisher.manager")
 memlogger = logging.getLogger("nebpublisher.memprofiler")
+
+#For testing, replace 2 lines above to:
+#logger = logging.getLogger('stomp-logger')
+#handler = logging.Handler()
+#def print_message(x):
+#    print x
+#handler.emit = print_message
+#logger.addHandler(handler)
 
 #used only to profile Memory usage
 if PROFILE_MEM :
@@ -60,7 +69,7 @@ class Manager(object):
           exit(1)
             
         #start execution      
-        self.parser = parser.Parser(self.topics, self.parser_functions)  
+        self.parser = neb_parser.Parser(self.topics, self.parser_functions)  
         self.subscriber = Subscriber("subscriber", self.mq, settings, self.parser, self.queue).start();                   
           
         self.processor = QueueProcessor(self.queue, self.settings)
@@ -186,43 +195,48 @@ class QueueProcessor(object):
 
 
 class ConnectionAdapter(object):
-  """ Integrates with a the STOMP client API. """
+  """Integrates with a the STOMP client API.
+  ConnectionAdapter is an easy-to-use way to send messages via stomp
+  """
   def __init__(self, broker, conn_sleep_delay):
     self.broker = broker
     self.conn_sleep_delay = conn_sleep_delay
-    self.conn = self.__connect()
-        
+    self.__connect()
+
+
   def send(self, message, headers={}, **keyword_headers):
     try:
       self.conn.send(message, headers, **keyword_headers)
-            
-    except stomp.NotConnectedException :
-      logger.error("Lost connection with '%s'." % (self.broker)) 
+    except stomp.internal.exception.NotConnectedException:
+      logger.error("Lost connection with %s. Trying to reconnect." % \
+                   self.broker)
       time.sleep(self.conn_sleep_delay)
-      # A propria api do stomp tenta se reconectar automaticamente, contudo apenas na parte TCP
-      # É necessario verificar se o TCP está conectado para entao conectar o Stomp.
-      try:
-        if self.conn.is_connected(): 
-          self.conn.connect()
-      except:
-        logger.debug("After wait... try again")
-        
+      self.__connect()
+      self.send(message, headers, **keyword_headers)
+  
+
   def __connect(self):
-    """ Attempts to connect to broker """
-    try:
-      connection = stomp.Connection(self.broker, '', '')
-      connection.add_listener(ErrorListener(connection))
-      connection.start()
-      connection.connect()
-    except Exception:
-      if type(sys.exc_info()[1]) == types.TupleType:
-        exc = sys.exc_info()[1][1]
-      else:
-        exc = sys.exc_info()[1]
-        logger.error('Unexpected error %s.' % (exc))
-        return connection
-    else:
-      return connection
+    """Attempts to connect to broker(s).
+    stomp will automatically try to connect to other brokers
+    if some of them are offline.
+    """
+    connection = stomp.Connection(self.broker, prefer_localhost=False,
+                                  try_loopback_connect=False)
+    connection.set_listener('', ErrorListener(connection))
+    connection.start()
+    connection.connect()
+    self.conn = connection
+
+    #What do we need it for?
+    #except Exception:
+    #  if type(sys.exc_info()[1]) == types.TupleType:
+    #    exc = sys.exc_info()[1][1]
+    #  else:
+    #    exc = sys.exc_info()[1]
+    #    logger.error('Unexpected error %s.' % (exc))
+    #    return connection
+    #else:
+    #  return connection
 
 
 class ErrorListener(stomp.ConnectionListener):
@@ -235,3 +249,22 @@ class ErrorListener(stomp.ConnectionListener):
       # This necessary because of an activemq bug - https://issues.apache.org/activemq/browse/AMQ-1376
       logger.error('TCP is connect but has some errors')
       self.connection.stop()
+
+
+
+if __name__ == '__main__':
+  print 'Testing...'
+  brokers = [('192.168.0.44', 61613), ('192.168.0.77', 61613)]
+  conn = ConnectionAdapter(brokers, 0)
+  while True:
+      try:
+          string_to_send = 'testing ' + str(time.time())
+          to_send = {'message': string_to_send,
+                     'headers': {'destination': '/queue/events'}}
+          print 'sent: %s' % string_to_send
+          conn.send(**to_send)
+          time.sleep(1)
+      except KeyboardInterrupt:
+          break
+  sys.exit()
+  #conn.conn.disconnect()
