@@ -114,7 +114,7 @@ class Subscriber(threading.Thread):
 
         events = self.parser.parse(type, str(message))
 
-        if (events != parser.NOT_IMPLEMENTED and events != parser.BAD_FORMAT):
+        if (events != neb_parser.NOT_IMPLEMENTED and events != neb_parser.BAD_FORMAT):
           for event in events:
             self.publish(event)
 
