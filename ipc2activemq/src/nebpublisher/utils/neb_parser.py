@@ -123,30 +123,26 @@ class Parser():
         for subitem in item['regexps']:
           r = subitem['regexp']
           m = r.match(message)
-          if m == None: 
-            logger.warn("Regexp does not produce content")
-          elif count_not_none(m.groups()) != len(subitem['properties']):
-            logger.warn("Regexp has a different number of properties from expected")
-          else:
-            # if groups in regexp and the number of properties match consider it a match
-            match = True
-            event['eventtype'] = item['eventtype']
-            event['description'] = message
+          if m != None: 
+            if count_not_none(m.groups()) != len(subitem['properties']):
+              logger.warn("Regexp has a different number of properties from expected")
+            else:
+              # if groups in regexp and the number of properties match consider it a match
+              match = True
+              event['eventtype'] = item['eventtype']
+              event['description'] = message
 
-            # if the regex contains an specific event type, override it
-            if 'eventtype' in subitem and subitem['eventtype'] != None:
-              event['eventtype'] = subitem['eventtype']
+              # if the regex contains an specific event type, override it
+              if 'eventtype' in subitem and subitem['eventtype'] != None:
+                event['eventtype'] = subitem['eventtype']
 
-            i = 1 # first match is the whole expression
-            for property in subitem['properties']:
-              if m.group(i) != None:
-                event[property] = m.group(i)
-                i = i + 1
-            # stop iterating over subitem
-            break
-
-            
-            
+              i = 1 # first match is the whole expression
+              for property in subitem['properties']:
+                if m.group(i) != None:
+                  event[property] = m.group(i)
+                  i = i + 1
+              # stop iterating over subitem
+              break
       
     logger.debug('event: %s' % str(event))
     if match == True:

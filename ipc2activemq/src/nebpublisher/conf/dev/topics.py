@@ -17,7 +17,7 @@ errorRegexps = [
     'properties' : ['state'],
     'eventtype' : 'MysqlCannotConnect',
     'regexp' : r"(OK|WARNING|CRITICAL) - Socket timeout"
-  }
+  },
 ]
 
 expressions = {
