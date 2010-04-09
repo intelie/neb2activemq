@@ -15,6 +15,30 @@ class TestServiceParser(unittest.TestCase):
         parser_functions = imp.load_source("parser_functions", parser_functions_path, open(parser_functions_path+'parser_functions.py', 'rb'))
         self.parser = Parser(topics, parser_functions)
 
+    def test_host_check_critical(self):
+        message = 'somehost^FPING CRITICAL - 201.59.129.13 (loss=100% )'
+        #TODO: verify what string Nagios send on host check
+        result = self.parser.parse(14, message)
+        self.assertTrue(result != BAD_FORMAT)
+        self.assertEqual('100', result['loss'])
+        self.assertEqual('CRITICAL', result['state'])
+        self.assertEqual('somehost', result['host'])
+        self.assertEqual('PING', result['eventtype'])
+        self.assertEqual('201.59.129.13', result['ip'])
+
+    def test_host_check_ok(self):
+        message = 'somehost^FPING OK - 200.225.157.77 (loss=0%, rta=0.690000 ms)'
+        #TODO: verify what string Nagios send on host check
+        result = self.parser.parse(14, message)
+        self.assertTrue(result != BAD_FORMAT)
+        self.assertEqual('0', result['loss'])
+        self.assertEqual('0.690000', result['rta'])
+        self.assertEqual('200.225.157.77', result['ip'])
+        self.assertEqual('OK', result['state'])
+        self.assertEqual('somehost', result['host'])
+        self.assertEqual('PING', result['eventtype'])
+
+
     # Test error cases
     def test_service_empty(self):
         result = self.parser.parse_service_check("")
@@ -65,7 +89,7 @@ class TestServiceParser(unittest.TestCase):
         self.assertEqual(result, BAD_FORMAT)
 
     # Test correct cases
-    def test_check_cpu(self):
+    def GC_test_check_cpu(self):
         message = "riold122^check_cpu^0^CPU usage (%user %system %idle) OK - 0 0 99 | iso.3.6.1.4.1.2021.11.9.0=0 iso.3.6.1.4.1.2021.11.10.0=0 iso.3.6.1.4.1.2021.11.11.0=99"
         events = self.parser.parse_service_check(message)
         self.assertEqual(events[0]["state"], "OK")
@@ -90,7 +114,7 @@ class TestServiceParser(unittest.TestCase):
         self.assertEqual(events[0]["idle"], "99")
         self.assertEqual(events[0]["eventtype"], "CPU")
 
-    def test_check_disk(self):
+    def GC_test_check_disk(self):
         message = "riold122^check_disk^0^Disk space OK - 64031408 kB free ( 3 % used) | iso.3.6.1.4.1.2021.9.1.7.1=64031408 iso.3.6.1.4.1.2021.9.1.9.1=3"
         events = self.parser.parse_service_check(message)
         self.assertEqual(events[0]["state"], "OK")

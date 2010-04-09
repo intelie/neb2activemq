@@ -49,7 +49,8 @@ class Parser():
   """  
   def load_types(self):
     self.switch = {
-      13: self.parse_service_check
+      13: self.parse_service_check,
+      14: self.parse_host_check,
     }
 
   def parse(self, type, message):
@@ -105,6 +106,25 @@ class Parser():
     
     logger.warn("Event type %s not registered as a topic" %(command_name))
     return BAD_FORMAT
+
+
+  def parse_host_check(self, message):
+    if message == None or len(message) == 0:
+        return BAD_FORMAT
+
+    logger.debug("Message %s - host check" % message)
+    data = []
+    data = message.split('^')
+    if len(data) < 2:
+        return BAD_FORMAT
+    if len(data[0]) == 0 or len(data[1]) == 0:
+        return BAD_FORMAT
+
+    logger.debug("Host %s - output %s" % (data[0],data[1]))
+    topic = self.topics.expressions['host']
+    event = self.create_event_from_regexp(data[0], data[1], topic)
+    return event
+
   
   def create_event_from_regexp(self, host, message, topic):
     event = {'host' : host}
