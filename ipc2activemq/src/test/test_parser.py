@@ -16,25 +16,27 @@ class TestServiceParser(unittest.TestCase):
         self.parser = Parser(topics, parser_functions)
 
     def test_host_check_critical(self):
-        message = 'somehost^FPING CRITICAL - 201.59.129.13 (loss=100% )'
+        message = 'somehost^2^FPING CRITICAL - 201.59.129.13 (loss=100% )'
         #TODO: verify what string Nagios send on host check
         result = self.parser.parse(14, message)
         self.assertTrue(result != BAD_FORMAT)
+        self.assertTrue(result != NOT_IMPLEMENTED)
         self.assertEqual('100', result['loss'])
-        self.assertEqual('CRITICAL', result['state'])
+        self.assertEqual('UNREACHABLE', result['state'])
         self.assertEqual('somehost', result['host'])
         self.assertEqual('PING', result['eventtype'])
         self.assertEqual('201.59.129.13', result['ip'])
 
     def test_host_check_ok(self):
-        message = 'somehost^FPING OK - 200.225.157.77 (loss=0%, rta=0.690000 ms)'
+        message = 'somehost^0^FPING OK - 200.225.157.77 (loss=0%, rta=0.690000 ms)'
         #TODO: verify what string Nagios send on host check
         result = self.parser.parse(14, message)
         self.assertTrue(result != BAD_FORMAT)
+        self.assertTrue(result != NOT_IMPLEMENTED)
         self.assertEqual('0', result['loss'])
         self.assertEqual('0.690000', result['rta'])
         self.assertEqual('200.225.157.77', result['ip'])
-        self.assertEqual('OK', result['state'])
+        self.assertEqual('UP', result['state'])
         self.assertEqual('somehost', result['host'])
         self.assertEqual('PING', result['eventtype'])
 
@@ -105,7 +107,7 @@ class TestServiceParser(unittest.TestCase):
         self.assertEqual(events[0]["system"], "0")
         self.assertEqual(events[0]["idle"], "99")
         self.assertEqual(events[0]["eventtype"], "CPU")
-			
+
         message = "riold122^check_cpu^0^CPU usage (%user %system %idle) CRITICAL - 0 0 *99* | iso.3.6.1.4.1.2021.11.9.0=0 iso.3.6.1.4.1.2021.11.10.0=0 iso.3.6.1.4.1.2021.11.11.0=99"
         events = self.parser.parse_service_check(message)
         self.assertEqual(events[0]["state"], "CRITICAL")

@@ -40,5 +40,18 @@ expressions = {
                      'regexp' : r"Disk space (OK|WARNING|CRITICAL) - (\d+) kB free \( \*?(\d+)\*? % used\)"
                    }]
         }
-        ]
+        ],
+        'host': [
+            {'labelFilter': None,
+             'eventtype': 'PING',
+             'regexps': [
+                {'properties': ['state', 'loss', 'rta'],
+                 'regexp': r"PING (OK|WARNING|CRITICAL) - Packet loss = ([0-9.]+)%, RTA = ([0-9.]+) ms"
+                },
+                {'properties': ['ip'],
+                 'regexp': 'CRITICAL - Host Unreachable \(([0-9.]+)\)'
+                },
+             ]
+            }
+        ],
 }

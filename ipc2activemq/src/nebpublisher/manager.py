@@ -101,7 +101,7 @@ class Subscriber(threading.Thread):
         logger.debug("Waiting for a OS message:")
         
         #This reception blocks until some new message appears. Other option is to use flag IPC_NOWAIT
-        message, type = self.mq.receive()
+        message, message_type = self.mq.receive()
         message = str(message)
 				
         if (message.find('\0') < 0):
@@ -110,16 +110,17 @@ class Subscriber(threading.Thread):
         
         message, char, garbage = message.partition('\0')
         
-        logger.debug("Message received. Type: %i Message: %s" %(type, str(message)))
+        logger.debug("Message received. Type: %i Message: %s" %(message_type, str(message)))
 
-        events = self.parser.parse(type, str(message))
+        events = self.parser.parse(message_type, str(message))
 
-        if (events != neb_parser.NOT_IMPLEMENTED and events != neb_parser.BAD_FORMAT):
+        if events != neb_parser.NOT_IMPLEMENTED and events != neb_parser.BAD_FORMAT:
           for event in events:
-            self.publish(event)
+            if event != neb_parser.NOT_IMPLEMENTED and event != neb_parser.BAD_FORMAT:
+              self.publish(event)
 
-        if (PROFILE_MEM ):
-          if (time.time() > time_ref + interval):
+        if PROFILE_MEM:
+          if time.time() > time_ref + interval:
             memlogger.debug(self.hp.heap())
             time_ref = time.time()
       except sysv_ipc.PermissionsError, sysv_ipc.ExistentialError:
@@ -130,7 +131,10 @@ class Subscriber(threading.Thread):
         logger.error("A severe error ocurred in os message queue. Aborting..")
         exit(1)
       except Exception, e:
+        a, b, c = sys.exc_info()
         logger.error('Unknown exception %s' % str(sys.exc_info()))
+        import traceback
+        traceback.print_exception(a, b, c)
         exit(1)
 
     
