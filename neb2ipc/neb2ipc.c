@@ -189,8 +189,8 @@ int neb2ipc_handle_data(int event_type, void *data) {
 			}
 
 			/* send message to message queue */
-			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%s\0",
-					hcdata->host_name, hcdata->output);
+			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%i^%s\0",
+					hcdata->host_name, hcdata->state, hcdata->output);
 			if (msgsnd(msqid, (struct buf *) &buf, sizeof(buf), IPC_NOWAIT)
 					== -1) {
 				snprintf(temp_buffer, sizeof(temp_buffer) - 1,

@@ -6,6 +6,8 @@ import sys
 NOT_IMPLEMENTED=1
 BAD_FORMAT=2
 
+SERVICE_CHECK_MAP = { 0 : 'OK', 1 : 'WARNING', 2 : 'CRITICAL', 3 : 'UNKNOWN' }
+HOST_CHECK_MAP = { 0 : 'UP', 1 : 'DOWN', 2 : 'UNREACHABLE' } 
 
 logger = logging.getLogger("nebpublisher.parser")
 
@@ -95,6 +97,7 @@ class Parser():
     if command_name in self.topics.expressions:        
       topic = self.topics.expressions[command_name]
       result = self.create_event_from_regexp(host, message, topic)
+	  result['state'] =  SERVICE_CHECK_MAP[int(state)]
       if result != BAD_FORMAT:
         return [result]
       return result
@@ -102,6 +105,8 @@ class Parser():
     elif command_name in self.parser_functions.commands:
       command_parser_functions = self.parser_functions.commands[command_name]
       events = self.create_events_from_parser_functions(host, message, command_parser_functions)
+	  for event in events:
+		event['state'] = SERVICE_CHECK_MAP[int(state)]
       return events
     
     logger.warn("Event type %s not registered as a topic" %(command_name))
@@ -115,14 +120,19 @@ class Parser():
     logger.debug("Message %s - host check" % message)
     data = []
     data = message.split('^')
-    if len(data) < 2:
+    if len(data) < 3:
         return BAD_FORMAT
-    if len(data[0]) == 0 or len(data[1]) == 0:
+    if (len(data[0]) == 0 or len(data[1]) == 0 or len(data[2]) == 0 ):
         return BAD_FORMAT
-
-    logger.debug("Host %s - output %s" % (data[0],data[1]))
+	
+	host = data[0]
+	state = data[1]
+	output = data[2]
+    logger.debug("Host %s - output %s" % (host,output) ) 
     topic = self.topics.expressions['host']
-    event = self.create_event_from_regexp(data[0], data[1], topic)
+    event = self.create_event_from_regexp(host, output, topic)
+	event['state'] = HOST_CHECK_MAP[int(state)]
+	
     return event
 
   
