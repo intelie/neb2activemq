@@ -45,13 +45,16 @@ expressions = {
             {'labelFilter': None,
              'eventtype': 'PING',
              'regexps': [
-                {'properties': ['state', 'loss', 'rta'],
-                 'regexp': r"PING (OK|WARNING|CRITICAL) - Packet loss = ([0-9.]+)%, RTA = ([0-9.]+) ms"
+                {'properties': ['state', 'ip', 'loss', 'rta'],
+                'regexp': r'FPING (OK|WARNING|CRITICAL) - ([0-9.]+) \(loss=([0-9]+)%, rta=([0-9.]+) ms\)'
                 },
+                {'properties': ['state', 'ip', 'loss'],
+                'regexp': r'FPING (OK|WARNING|CRITICAL) - ([0-9.]+) \(loss=([0-9]+)% \)'              
+                },                
                 {'properties': ['ip'],
                  'regexp': 'CRITICAL - Host Unreachable \(([0-9.]+)\)'
                 },
              ]
             }
-        ],
+        ]
 }

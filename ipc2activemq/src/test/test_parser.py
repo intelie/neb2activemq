@@ -21,11 +21,11 @@ class TestServiceParser(unittest.TestCase):
         result = self.parser.parse(14, message)
         self.assertTrue(result != BAD_FORMAT)
         self.assertTrue(result != NOT_IMPLEMENTED)
-        self.assertEqual('100', result['loss'])
-        self.assertEqual('UNREACHABLE', result['state'])
-        self.assertEqual('somehost', result['host'])
-        self.assertEqual('PING', result['eventtype'])
-        self.assertEqual('201.59.129.13', result['ip'])
+        self.assertEqual('100', result[0]['loss'])
+        self.assertEqual('UNREACHABLE', result[0]['state'])
+        self.assertEqual('somehost', result[0]['host'])
+        self.assertEqual('PING', result[0]['eventtype'])
+        self.assertEqual('201.59.129.13', result[0]['ip'])
 
     def test_host_check_ok(self):
         message = 'somehost^0^FPING OK - 200.225.157.77 (loss=0%, rta=0.690000 ms)'
@@ -33,13 +33,17 @@ class TestServiceParser(unittest.TestCase):
         result = self.parser.parse(14, message)
         self.assertTrue(result != BAD_FORMAT)
         self.assertTrue(result != NOT_IMPLEMENTED)
-        self.assertEqual('0', result['loss'])
-        self.assertEqual('0.690000', result['rta'])
-        self.assertEqual('200.225.157.77', result['ip'])
-        self.assertEqual('UP', result['state'])
-        self.assertEqual('somehost', result['host'])
-        self.assertEqual('PING', result['eventtype'])
+        self.assertEqual('0', result[0]['loss'])
+        self.assertEqual('0.690000', result[0]['rta'])
+        self.assertEqual('200.225.157.77', result[0]['ip'])
+        self.assertEqual('UP', result[0]['state'])
+        self.assertEqual('somehost', result[0]['host'])
+        self.assertEqual('PING', result[0]['eventtype'])
 
+    def test_host_check_parse_error(self):
+        message = 'host^0^some message'
+        result = self.parser.parse(14, message)
+        self.assertTrue(result == BAD_FORMAT)        
 
     # Test error cases
     def test_service_empty(self):

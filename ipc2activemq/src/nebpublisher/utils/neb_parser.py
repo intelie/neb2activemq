@@ -130,9 +130,11 @@ class Parser():
     logger.debug("Host %s - output %s" % (host,output) ) 
     topic = self.topics.expressions['host']
     event = self.create_event_from_regexp(host, output, topic)
+    
     if event != BAD_FORMAT and event != NOT_IMPLEMENTED:
         event['state'] = HOST_CHECK_MAP[int(state)]
-    return [event]
+        return [event]
+    return event
 
   
   def create_event_from_regexp(self, host, message, topic):

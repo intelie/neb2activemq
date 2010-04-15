@@ -131,10 +131,7 @@ class Subscriber(threading.Thread):
         logger.error("A severe error ocurred in os message queue. Aborting..")
         exit(1)
       except Exception, e:
-        a, b, c = sys.exc_info()
         logger.error('Unknown exception %s' % str(sys.exc_info()))
-        import traceback
-        traceback.print_exception(a, b, c)
         exit(1)
 
     
