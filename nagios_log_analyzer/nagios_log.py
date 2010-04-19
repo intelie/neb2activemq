@@ -27,12 +27,14 @@ class NagiosLog(object):
         [1268225809] PROGRAM_RESTART event encountered, restarting...
         [1268225809] Nagios 3.2.0 starting... (PID=3443)
         [1268227762] SERVICE FLAPPING ALERT: zes-001;cpu;STARTED; Service appears to have started flapping (22.3% change >= 20.0% threshold)
+        [1271265737] neb2ipc: I'm still here! Processing events to activemq
         '''
         new_lines = []
         for line in self.lines:
             info = line.split()
             prohibited_words = ['Auto-save', 'Warning:', 'Local', 'LOG',
-                                'EXTERNAL', 'PROGRAM_RESTART', 'Nagios']
+                                'EXTERNAL', 'PROGRAM_RESTART', 'Nagios',
+                                'neb2ipc:']
             if info[1] in prohibited_words or info[2] == 'FLAPPING':
                 continue
             new_lines.append(line)
@@ -179,20 +181,21 @@ def write_grouped_commands(grouped_commands_and_outputs, filename):
 
 if __name__ == '__main__':
     import sys
-    sys.path.append('/path/to/neb2activemq/ipc2activemq/src/nebpublisher/utils')
-    sys.path.append('/path/to/topics.py')
+    sys.path.append('../ipc2activemq/src/nebpublisher/utils')
+    sys.path.append('/home/alvaro/Intelie/Code/igsetup/trunk')
+    parent_dir = '/home/alvaro/Intelie/Code/igsetup/trunk/v4/analysis'
+    conf_dir = '/home/alvaro/Intelie/Code/igsetup/trunk/nagios_conf'
 
     import topics
     import neb_parser
 
-    parent_dir = '/path/to/store/analysis'
     nagios = NagiosLog('%s/nagios.log' % parent_dir)
 
     nagios.cleanup(save_in_file='%s/nagios-cleanup.log' % parent_dir)
 
     nagios.save_service_descriptions_in('%s/service_descriptions.txt' % parent_dir)
 
-    conf_files = glob.glob('%s/nagios_conf/*' % parent_dir)
+    conf_files = glob.glob(conf_dir + '/*.cfg')
     csvname = '%s/nagios-service_descriptions-and-commands.csv' % parent_dir
     nagios.export_descriptions_and_commands_from_conf(conf_files, csvname)
 

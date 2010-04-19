@@ -14,15 +14,13 @@ my_parser = neb_parser.Parser(topics, parser_functions)
 messages_file_object = open(filename)
 messages = messages_file_object.read()
 
-for line in messages.split('\n'):
-    if not line:
+for message in messages.split('\n'):
+    if not message:
         continue
-    message = 'HOST^%s^STATE^%s' % ('check_cpu', line)
     parsed = my_parser.parse(13, message)
-    if parsed != neb_parser.BAD_FORMAT:
+    if parsed != neb_parser.BAD_FORMAT and parsed != neb_parser.NOT_IMPLEMENTED:
         print line, parsed
     else:
          print 'NOT PARSED: %s' % message
-    print ''
 
 messages_file_object.close()
