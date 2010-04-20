@@ -7,7 +7,7 @@ NOT_IMPLEMENTED=1
 BAD_FORMAT=2
 
 SERVICE_CHECK_MAP = { 0 : 'OK', 1 : 'WARNING', 2 : 'CRITICAL', 3 : 'UNKNOWN' }
-HOST_CHECK_MAP = { 0 : 'UP', 1 : 'DOWN', 2 : 'UNREACHABLE' } 
+HOST_CHECK_MAP = { 0 : 'OK', 1 : 'CRITICAL', 2 : 'UNKNOWN' } 
 
 logger = logging.getLogger("nebpublisher.parser")
 
@@ -185,7 +185,9 @@ class Parser():
   def create_events_from_parser_functions(self, host, message, command_parser_functions):
     for parser_function_struct in command_parser_functions:
       if parser_function_struct['labelFilter'] == None or not message.startswith(parser_function_struct['labelFilter']):
+      #if not message.startswith(parser_function_struct['labelFilter'] or ''):
         logger.debug("Does not match with label")
+        return []
       else:
-        events = parser_function_struct['function'](message, parser_function_struct['eventtype'], parser_function_struct['labelFilter'])
+        events = parser_function_struct['function'](host, message, parser_function_struct['eventtype'], parser_function_struct['labelFilter'])
         return events

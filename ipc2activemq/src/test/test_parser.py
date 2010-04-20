@@ -22,7 +22,7 @@ class TestServiceParser(unittest.TestCase):
         self.assertTrue(result != BAD_FORMAT)
         self.assertTrue(result != NOT_IMPLEMENTED)
         self.assertEqual('100', result[0]['loss'])
-        self.assertEqual('UNREACHABLE', result[0]['state'])
+        self.assertEqual('UNKNOWN', result[0]['state'])
         self.assertEqual('somehost', result[0]['host'])
         self.assertEqual('PING', result[0]['eventtype'])
         self.assertEqual('201.59.129.13', result[0]['ip'])
@@ -36,7 +36,7 @@ class TestServiceParser(unittest.TestCase):
         self.assertEqual('0', result[0]['loss'])
         self.assertEqual('0.690000', result[0]['rta'])
         self.assertEqual('200.225.157.77', result[0]['ip'])
-        self.assertEqual('UP', result[0]['state'])
+        self.assertEqual('OK', result[0]['state'])
         self.assertEqual('somehost', result[0]['host'])
         self.assertEqual('PING', result[0]['eventtype'])
 
@@ -156,7 +156,196 @@ class TestServiceParser(unittest.TestCase):
       self.assertEqual(events[1]["eventtype"], "FMS")
       self.assertEqual(events[1]["label"], "gnews/live")
       self.assertEqual(events[1]["value"], "34")
-      
+    
+    
+    def test_check_unix_df_empty(self):
+        message = 'some_host^check_unix_df^0^DISK OK'
+        events = self.parser.parse_service_check(message)
+        self.assertTrue(type(events) != type(42))
+        self.assertEqual(1, len(events))
+        event = events[0]
+        self.assertTrue(type(event) != type(42))
+        self.assertEqual('Disk', event['eventtype'])
+        self.assertEqual('OK', event['state'])
+        self.assertEqual('some_host', event['host'])
+
+
+    def test_check_unix_df_one_partition(self):
+        message = 'some_host^check_unix_df^0^DISK OK [1463088 kB (74%) free on /]'
+        events = self.parser.parse_service_check(message)
+        self.assertTrue(type(events) != type(42))
+        self.assertEqual(1, len(events))
+        event = events[0]
+        self.assertTrue(type(event) != type(42))
+        self.assertEqual('Disk', event['eventtype'])
+        self.assertEqual('OK', event['state'])
+        self.assertEqual('some_host', event['host'])
+        self.assertEqual('/', event['partition'])
+        self.assertEqual(74, event['free_percent'])
+
+
+    def test_check_unix_df_one_partition(self):
+        message = 'some_host^check_unix_df^0^DISK OK [1463088 kB (74%) free on /] [161576 kB (84%) free on /boot] [8207240 kB (100%) free on /dev/shm] [3630536 kB (74%) free on /home] [340256896 kB (91%) free on /iG] [1890652 kB (96%) free on /tmp] [3680220 kB (75%) free on /usr] [3596540 kB (73%) free on /var] [250298192 kB (20%) free on /u01] [1342944384 kB (68%) free on /u02]'
+        events = self.parser.parse_service_check(message)
+        self.assertTrue(type(events) != type(42))
+        self.assertEqual(10, len(events))
         
+        #[1463088 kB (74%) free on /]
+        self.assertTrue(type(events[0]) != type(42))
+        self.assertEqual('Disk', events[0]['eventtype'])
+        self.assertEqual('OK', events[0]['state'])
+        self.assertEqual('some_host', events[0]['host'])
+        self.assertEqual('/', events[0]['partition'])
+        self.assertEqual(74.0, events[0]['free_percent'])
+
+        #[161576 kB (84%) free on /boot]
+        self.assertTrue(type(events[1]) != type(42))
+        self.assertEqual('Disk', events[1]['eventtype'])
+        self.assertEqual('OK', events[1]['state'])
+        self.assertEqual('some_host', events[1]['host'])
+        self.assertEqual('/boot', events[1]['partition'])
+        self.assertEqual(84.0, events[1]['free_percent'])
+
+        #[8207240 kB (100%) free on /dev/shm]
+        self.assertTrue(type(events[2]) != type(42))
+        self.assertEqual('Disk', events[2]['eventtype'])
+        self.assertEqual('OK', events[2]['state'])
+        self.assertEqual('some_host', events[2]['host'])
+        self.assertEqual('/dev/shm', events[2]['partition'])
+        self.assertEqual(100.0, events[2]['free_percent'])
+
+        #[3630536 kB (74%) free on /home]
+        self.assertTrue(type(events[3]) != type(42))
+        self.assertEqual('Disk', events[3]['eventtype'])
+        self.assertEqual('OK', events[3]['state'])
+        self.assertEqual('some_host', events[3]['host'])
+        self.assertEqual('/home', events[3]['partition'])
+        self.assertEqual(74.0, events[3]['free_percent'])
+
+        #[340256896 kB (91%) free on /iG]
+        self.assertTrue(type(events[4]) != type(42))
+        self.assertEqual('Disk', events[4]['eventtype'])
+        self.assertEqual('OK', events[4]['state'])
+        self.assertEqual('some_host', events[4]['host'])
+        self.assertEqual('/iG', events[4]['partition'])
+        self.assertEqual(91.0, events[4]['free_percent'])
+
+        #[1890652 kB (96%) free on /tmp]
+        self.assertTrue(type(events[5]) != type(42))
+        self.assertEqual('Disk', events[5]['eventtype'])
+        self.assertEqual('OK', events[5]['state'])
+        self.assertEqual('some_host', events[5]['host'])
+        self.assertEqual('/tmp', events[5]['partition'])
+        self.assertEqual(96.0, events[5]['free_percent'])
+
+        #[3680220 kB (75%) free on /usr]
+        self.assertTrue(type(events[6]) != type(42))
+        self.assertEqual('Disk', events[6]['eventtype'])
+        self.assertEqual('OK', events[6]['state'])
+        self.assertEqual('some_host', events[6]['host'])
+        self.assertEqual('/usr', events[6]['partition'])
+        self.assertEqual(75.0, events[6]['free_percent'])
+
+        #[3596540 kB (73%) free on /var]
+        self.assertTrue(type(events[7]) != type(42))
+        self.assertEqual('Disk', events[7]['eventtype'])
+        self.assertEqual('OK', events[7]['state'])
+        self.assertEqual('some_host', events[7]['host'])
+        self.assertEqual('/var', events[7]['partition'])
+        self.assertEqual(73.0, events[7]['free_percent'])
+
+        #[250298192 kB (20%) free on /u01]
+        self.assertTrue(type(events[8]) != type(42))
+        self.assertEqual('Disk', events[8]['eventtype'])
+        self.assertEqual('OK', events[8]['state'])
+        self.assertEqual('some_host', events[8]['host'])
+        self.assertEqual('/u01', events[8]['partition'])
+        self.assertEqual(20.0, events[8]['free_percent'])
+
+        #[1342944384 kB (68%) free on /u02]
+        self.assertTrue(type(events[9]) != type(42))
+        self.assertEqual('Disk', events[9]['eventtype'])
+        self.assertEqual('OK', events[9]['state'])
+        self.assertEqual('some_host', events[9]['host'])
+        self.assertEqual('/u02', events[9]['partition'])
+        self.assertEqual(68.0, events[9]['free_percent'])
+
+
+    def test_check_unix_df_other_format(self):
+        message = 'some_host^check_unix_df^0^DISK OK - free space: / 1096 MB (57% inode=95%): /tmp 2801 MB (97% inode=99%): /iG 735192 MB (94% inode=97%): /home 4410 MB (96% inode=99%): /usr 3482 MB (72% inode=88%): /var 3886 MB (81% inode=97%): /boot 137 MB (73% inode=99%): /dev/shm 16093 MB (100% inode=99%): /iG/dominios/publicador_arqs77 815668 MB (62% inode=94%):'
+        events = self.parser.parse_service_check(message)
+
+        self.assertEqual(9, len(events))
+        for event in events:
+            self.assertEqual('some_host', event['host'])
+            self.assertEqual('OK', event['state'])
+            self.assertEqual('Disk', event['eventtype'])
+
+            #/ 1096 MB (57% inode=95%):
+            self.assertEqual('/', events[0]['partition'])
+            self.assertEqual(57.0, events[0]['free_percent'])
+
+            #/tmp 2801 MB (97% inode=99%):
+            self.assertEqual('/tmp', events[1]['partition'])
+            self.assertEqual(97.0, events[1]['free_percent'])
+
+            #/iG 735192 MB (94% inode=97%):
+            self.assertEqual('/iG', events[2]['partition'])
+            self.assertEqual(94.0, events[2]['free_percent'])
+
+            #/home 4410 MB (96% inode=99%):
+            self.assertEqual('/home', events[3]['partition'])
+            self.assertEqual(96.0, events[3]['free_percent'])
+
+            #/usr 3482 MB (72% inode=88%):
+            self.assertEqual('/usr', events[4]['partition'])
+            self.assertEqual(72.0, events[4]['free_percent'])
+
+            #/var 3886 MB (81% inode=97%):
+            self.assertEqual('/var', events[5]['partition'])
+            self.assertEqual(81.0, events[5]['free_percent'])
+
+            #/boot 137 MB (73% inode=99%):
+            self.assertEqual('/boot', events[6]['partition'])
+            self.assertEqual(73.0, events[6]['free_percent'])
+
+            #/dev/shm 16093 MB (100% inode=99%):
+            self.assertEqual('/dev/shm', events[7]['partition'])
+            self.assertEqual(100.0, events[7]['free_percent'])
+
+            #/iG/dominios/publicador_arqs77 815668 MB (62% inode=94%):
+            self.assertEqual('/iG/dominios/publicador_arqs77', events[8]['partition'])
+            self.assertEqual(62.0, events[8]['free_percent'])
+
+    def test_check_unix_df_problem(self):
+        message = 'some_host^check_unix_df^1^DISK WARNING [1551620 kB (79%) free on /dev/mapper/Vol_IG-root_lv] [170506 kB (88%) free on /dev/sda1] [8207240 kB (100%) free on /dev/shm] [3197896 kB (65%) free on /dev/mapper/Vol_IG-home_lv] [88741864 kB (23%) free on /dev/mapper/Vol_IG-ig_lv] [1890660 kB (96%) free on /dev/mapper/Vol_IG-tmp_lv] [3713612 kB (75%) free on /dev/mapper/Vol_IG-usr_lv] [3652340 kB (74%) free on /dev/mapper/Vol_IG-var_lv] [228675264 kB (18%) free on /dev/mapper/AMSFC-u01FC] [186979120 kB (9%)'
+        events = self.parser.parse_service_check(message)
+        self.assertEqual(9, len(events))
+
+    def test_check_unix_df_warning(self):
+        message = 'some_host^check_unix_df^1^DISK WARNING [94573136 kB (90%) used on /dev/mapper/Vol_IG-ig_lv]'
+        events = self.parser.parse_service_check(message)
+        self.assertEqual(1, len(events))
+        event = events[0]
+        self.assertEqual('some_host', event['host'])
+        self.assertEqual('WARNING', event['state'])
+        self.assertEqual('Disk', event['eventtype'])
+        self.assertEqual('/dev/mapper/Vol_IG-ig_lv', event['partition'])
+        self.assertEqual(10.0, event['free_percent'])
+
+
+    def test_check_disk_NT(self):
+        message = 'some_host^check_disk_NT^0^DISK OK - Drive C: Local Disk - Total: 30.01 GB - Free: 23.05 GB (77%) - Used: 6.95 GB (23%)'
+        events = self.parser.parse_service_check(message)
+        self.assertEqual(1, len(events))
+        event = events[0]
+        self.assertEqual('some_host', event['host'])
+        self.assertEqual('OK', event['state'])
+        self.assertEqual('Disk', event['eventtype'])
+        self.assertEqual('Drive C: Local Disk', event['partition'])
+        self.assertEqual('77', event['free_percent'])
+        #TODO: return free_percent as string in tests above?
+
+
 if __name__ == '__main__':
     unittest.main()
