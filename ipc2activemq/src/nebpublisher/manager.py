@@ -166,16 +166,22 @@ class QueueProcessor(object):
         while True:
             try:    
                 if sent:
-                    #bloqueia se estiver vazio
+                    #block if queue is empty
                     header, body = self.queue.get(True)
                     logger.debug("HEADER %s" % str(header))
                     logger.debug("BODY %s" % str(body))
                     sent = False
                     logger.debug("New message taken from queue %s %s" % (str(header), str(body) ) )
                  
-                self.connection.send(json.dumps(body), header, destination=header['destination'])
-                sent = True
-                    
+                try:
+                    msg = json.dumps(body)
+                except UnicodeDecodeError:
+                    enc = chardet.detect(body)['encoding']
+                    msg = json.dumps(body, encoding=enc)
+                finally:
+                    self.connection.send(msg, header, destination=header['destination'])
+                    sent = True
+                
             except Queue.Empty:
               logger.debug(" --Empty queue-- ")
               continue
@@ -188,7 +194,11 @@ class QueueProcessor(object):
               #try to reconnect
               logger.error("Socket error >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
               self.connection = ConnectionAdapter(self.settings.BROKER, self.settings.CONN_SLEEP_DELAY)
-              
+            
+            except UnicodeDecodeError:
+                # detect enconding does not correspond
+                logger.warn('Impossible to decode %s' % str(body))
+                sent True  
             except Exception, e:
               logger.error('Unknown exception %s' % str(sys.exc_info()))
               #TODO: Maybe retry
