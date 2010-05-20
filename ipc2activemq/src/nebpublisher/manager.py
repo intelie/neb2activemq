@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import sys
 import types
-import stomp
 import sys
 import time
 import logging
@@ -13,9 +13,10 @@ import socket
 import copy
 import json
 from utils import neb_parser
+import stomp #stomp have an utils.py! Import AFTER neb_parser
 
 #TODO Move this to settings or to an environment option 
-PROFILE_MEM=False
+PROFILE_MEM = False
 
 logger = logging.getLogger("nebpublisher.manager")
 memlogger = logging.getLogger("nebpublisher.memprofiler")
@@ -161,13 +162,16 @@ class QueueProcessor(object):
         self.connection = ConnectionAdapter(settings.BROKER, settings.CONN_SLEEP_DELAY) 
         self.settings = settings
     
-    def process(self):
+
+    def process(self, max_messages=-1):
         sent = True
-        while True:
-            try:    
+        processed_messages = 0
+        while processed_messages != max_messages:
+            try:
                 if sent:
                     #block if queue is empty
                     header, body = self.queue.get(True)
+                    processed_messages += 1
                     logger.debug("HEADER %s" % str(header))
                     logger.debug("BODY %s" % str(body))
                     sent = False
@@ -176,10 +180,15 @@ class QueueProcessor(object):
                 try:
                     msg = json.dumps(body)
                 except UnicodeDecodeError:
-                    enc = chardet.detect(body)['encoding']
-                    msg = json.dumps(body, encoding=enc)
+                    try:
+                        enc = chardet.detect(body)['encoding']
+                        msg = json.dumps(body, encoding=enc)
+                    except:
+                        logger.error("UnicodeDecodeError on Queuprocessor.process - can't use chardet, discarding message")
+                        msg = None
                 finally:
-                    self.connection.send(msg, header, destination=header['destination'])
+                    if msg is not None:
+                        self.connection.send(msg, header, destination=header['destination'])
                     sent = True
                 
             except Queue.Empty:
@@ -195,10 +204,6 @@ class QueueProcessor(object):
               logger.error("Socket error >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
               self.connection = ConnectionAdapter(self.settings.BROKER, self.settings.CONN_SLEEP_DELAY)
             
-            except UnicodeDecodeError:
-                # detect enconding does not correspond
-                logger.warn('Impossible to decode %s' % str(body))
-                sent True  
             except Exception, e:
               logger.error('Unknown exception %s' % str(sys.exc_info()))
               #TODO: Maybe retry
