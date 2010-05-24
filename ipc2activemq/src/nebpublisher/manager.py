@@ -21,13 +21,11 @@ PROFILE_MEM = False
 logger = logging.getLogger("nebpublisher.manager")
 memlogger = logging.getLogger("nebpublisher.memprofiler")
 
-#For testing, replace 2 lines above to:
-#logger = logging.getLogger('stomp-logger')
-#handler = logging.Handler()
-#def print_message(x):
-#    print x
-#handler.emit = print_message
-#logger.addHandler(handler)
+try:
+    import chardet
+except ImportError:
+    logger.error('chardet is not installed - manager will discard all messages if UnicodeDecodeError is raised')
+
 
 #used only to profile Memory usage
 if PROFILE_MEM :
@@ -183,8 +181,13 @@ class QueueProcessor(object):
                     try:
                         enc = chardet.detect(body)['encoding']
                         msg = json.dumps(body, encoding=enc)
-                    except:
-                        logger.error("UnicodeDecodeError on Queuprocessor.process - can't use chardet, discarding message")
+                    except Exception:
+                        try:
+                            err = str(body)
+                        except:
+                            err = "*can't convert message to string*"
+                        logger.error("UnicodeDecodeError on Queuprocessor.process. Discarding message. Exception: %s; Message: %s" % \
+                                     (str(sys.exc_info()), err))
                         msg = None
                 finally:
                     if msg is not None:
