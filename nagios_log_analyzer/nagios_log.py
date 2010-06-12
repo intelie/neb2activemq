@@ -28,6 +28,8 @@ class NagiosLog(object):
         [1268225809] Nagios 3.2.0 starting... (PID=3443)
         [1268227762] SERVICE FLAPPING ALERT: zes-001;cpu;STARTED; Service appears to have started flapping (22.3% change >= 20.0% threshold)
         [1271265737] neb2ipc: I'm still here! Processing events to activemq
+        [1276228945] Event broker module '/iG/nagios/bin/neb2ipc.o' deinitialized successfully.
+        [1276225600] SERVICE NOTIFICATION: nagiosadmin;cache-02;Memoria;UNKNOWN;notify-host-by-email;ERROR: netsnmp : No response from remote host 10.10.71.2.
         '''
         new_lines = []
         for line in self.lines:
@@ -35,7 +37,8 @@ class NagiosLog(object):
             prohibited_words = ['Auto-save', 'Warning:', 'Local', 'LOG',
                                 'EXTERNAL', 'PROGRAM_RESTART', 'Nagios',
                                 'neb2ipc:']
-            if info[1] in prohibited_words or info[2] == 'FLAPPING':
+            if info[1] in prohibited_words or info[2] == 'FLAPPING' \
+               or not ';' in line or ' '.join(info[1:3]) == 'SERVICE NOTIFICATION:':
                 continue
             new_lines.append(line)
 
@@ -136,9 +139,16 @@ class NagiosLog(object):
             for i, line in enumerate(self.lines):
                 info = ': '.join(line.split(': ')[1:]).split(';')
                 check_command = self.descriptions_and_commands[info[1]].split('!')[0]
-                check_output = ';'.join(info[5:]).replace('\n', '')
+                if 'CURRENT HOST STATE:' in line:
+                    check_output = ';'.join(info[4:]).replace('\n', '')
+                    state = info[3]
+                else:
+                    check_output = ';'.join(info[5:]).replace('\n', '')
+                    state = info[4]
+
                 commands_and_outputs.append({'check_command': check_command,
-                                             'output': check_output})
+                                             'output': check_output,
+                                             'state': state})
             self.commands_and_outputs = commands_and_outputs
         return self.commands_and_outputs
 
@@ -180,13 +190,26 @@ def write_grouped_commands(grouped_commands_and_outputs, filename):
 
 
 if __name__ == '__main__':
+    import os
+    import logging, logging.config
     import sys
-    sys.path.append('../ipc2activemq/src/nebpublisher/utils')
-    sys.path.append('/home/alvaro/Intelie/Code/igsetup/trunk')
-    parent_dir = '/home/alvaro/Intelie/Code/igsetup/trunk/v4/analysis'
-    conf_dir = '/home/alvaro/Intelie/Code/igsetup/trunk/nagios_conf'
+    #For Intelie developers: change '*' in the next lines for the datacenter path
+    sys.path.append('/home/alvaro/intelie/*') #for topics and parser_functions
+    #sys.path.append('../ipc2activemq/src/nebpublisher/conf/dev') #for topics if none above
+    sys.path.append('../ipc2activemq/src/nebpublisher/utils') #for neb_parser
+    parent_dir = '/home/alvaro/intelie/*/analise'
+    conf_dir = '/home/alvaro/intelie/*/config'
+    log_conf = '../ipc2activemq/src/nebpublisher/conf/log.ini'
+
+    if os.path.isfile(log_conf):
+        print "configuring log from log.ini"
+        logging.config.fileConfig(log_conf)
+    else:
+        print "no log.ini was found"
+        logging.basicConfig()
 
     import topics
+    import parser_functions
     import neb_parser
 
     nagios = NagiosLog('%s/nagios.log' % parent_dir)
@@ -204,21 +227,21 @@ if __name__ == '__main__':
     nagios.remove_not_found_services(save='%s/nagios-cleanup-consistent.log' % parent_dir)
 
     commands_and_outputs = nagios.get_check_commands_and_outputs()
-    
+
     commands_and_outputs = remove_duplicates(commands_and_outputs)
     grouped_commands = group_commands(commands_and_outputs)
     write_grouped_commands(grouped_commands, '%s/all_commands_grouped.txt' % parent_dir)
-    
-    parser_functions = type('empty_class', tuple(), {})
-    parser_functions.commands = []
 
     my_parser = neb_parser.Parser(topics, parser_functions)
     total_parsed = 0
     not_parsed = []
+
     for cmd_out in commands_and_outputs:
         command = cmd_out['check_command']
         output  = cmd_out['output']
-        message = 'HOST^%s^STATE^%s' % (command, output)
+        state = cmd_out['state']
+        message = 'HOST^%s^%s^%s' % (command, state, output)
+        print message
         parsed = my_parser.parse(13, message)
         if parsed != neb_parser.BAD_FORMAT:
             print command, parsed
@@ -226,7 +249,7 @@ if __name__ == '__main__':
             total_parsed += 1
         else:
             not_parsed.append(cmd_out)
-                
+
     not_parsed = remove_duplicates(not_parsed)
     not_parsed_grouped = group_commands(not_parsed)
     write_grouped_commands(not_parsed_grouped, '%s/not_parsed_grouped.txt' % parent_dir)
@@ -236,3 +259,9 @@ if __name__ == '__main__':
                                                           else 0
     print '--- Total of events: %d' % len(commands_and_outputs)
     print '--- Total of parsed events: %d (%f%%)' % (total_parsed, percentual)
+    if len(not_parsed):
+        print ''
+        print '--- Events not parsed:'
+        for event in not_parsed:
+            print '    %s' % event
+            print ''
