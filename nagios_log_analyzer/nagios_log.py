@@ -201,6 +201,12 @@ if __name__ == '__main__':
     conf_dir = '/home/alvaro/intelie/*/config'
     log_conf = '../ipc2activemq/src/nebpublisher/conf/log.ini'
 
+    sys.path.append('/home/alvaro/intelie/igsetup/trunk/poa') #for topics and parser_functions
+    sys.path.append('../ipc2activemq/src/nebpublisher/utils') #for neb_parser
+    parent_dir = '/home/alvaro/intelie/igsetup/trunk/poa/analise'
+    conf_dir = '/home/alvaro/intelie/igsetup/trunk/poa/config'
+    log_conf = '../ipc2activemq/src/nebpublisher/conf/log.ini'
+
     if os.path.isfile(log_conf):
         print "configuring log from log.ini"
         logging.config.fileConfig(log_conf)
@@ -236,11 +242,18 @@ if __name__ == '__main__':
     total_parsed = 0
     not_parsed = []
 
+    check_command_count = {}
     for cmd_out in commands_and_outputs:
         command = cmd_out['check_command']
         output  = cmd_out['output']
         state = cmd_out['state']
         message = 'HOST^%s^%s^%s' % (command, state, output)
+
+        if command in check_command_count:
+            check_command_count[command] += 1
+        else:
+            check_command_count[command] = 1
+
         print message
         parsed = my_parser.parse(13, message)
         if parsed != neb_parser.BAD_FORMAT:
@@ -259,6 +272,20 @@ if __name__ == '__main__':
                                                           else 0
     print '--- Total of events: %d' % len(commands_and_outputs)
     print '--- Total of parsed events: %d (%f%%)' % (total_parsed, percentual)
+
+    print '--- Check command count:'
+    print '    ' + u'\u02cf' + u'\u02cd' * 77 + u'\u02ce'
+    print '    |      SERVICE DESCRIPTION      |         CHECK COMMAND         | # OF EVENTS |'
+    print '    |' + u'\u02c9' * 31 + '|' + u'\u02c9' * 31 + '|' + u'\u02c9' * 13 + '|'
+    for description, full_command in nagios.descriptions_and_commands.iteritems():
+        command = full_command.split('!')[0]
+        if command in check_command_count:
+            value = str(check_command_count[command])
+        else:
+            value = '(!) 0'
+        print '    | %29s | %29s | %11s |' % (description, command, value)
+    print '    ' + u'\u02cb' + u'-' * 77 + u'\u02ca'
+
     if len(not_parsed):
         print ''
         print '--- Events not parsed:'
