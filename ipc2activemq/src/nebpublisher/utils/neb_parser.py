@@ -62,7 +62,10 @@ class Parser():
       self.not_implemented_type(type)
       return NOT_IMPLEMENTED
     except Exception, e:
-      logger.warn('Unknown exception %s' % str(sys.exc_info()))
+      info = sys.exc_info()
+      import traceback
+      traceback.print_tb(info[2])
+      logger.warn('Unknown exception %s' % str(info))
       exit(1)
 
   def not_implemented_type(self, type):
