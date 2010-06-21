@@ -30,7 +30,15 @@ class NagiosLog(object):
         [1271265737] neb2ipc: I'm still here! Processing events to activemq
         [1276228945] Event broker module '/iG/nagios/bin/neb2ipc.o' deinitialized successfully.
         [1276225600] SERVICE NOTIFICATION: nagiosadmin;cache-02;Memoria;UNKNOWN;notify-host-by-email;ERROR: netsnmp : No response from remote host 10.10.71.2.
+
+        #TODO We can also the approach of catch just the lines we know, like:
+            if ' '.join(line_by_spaces[1:3]) == 'SERVICE ALERT:' or \
+               ' '.join(line_by_spaces[1:3]) == 'HOST ALERT:' or \
+               ' '.join(line_by_spaces[1:4]) == 'CURRENT HOST STATE:' or \
+               ' '.join(line_by_spaces[1:4]) == 'CURRENT SERVICE STATE:':
+
         '''
+
         new_lines = []
         for line in self.lines:
             info = line.split()
