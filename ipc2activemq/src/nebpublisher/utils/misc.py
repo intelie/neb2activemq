@@ -1,3 +1,5 @@
+"""Util functions"""
+
 from __future__ import with_statement
 import threading
 import signal
@@ -5,62 +7,60 @@ import inspect
 import math, random
 import Queue
 import time, logging, sys
+import os
 
 #allow logging per module
 logger = logging.getLogger("watson.utils") 
-  
-""" Util functions """
+
 
 def run_as_daemon(fn, pidfile):
-  logger.info("Running as deamon")
-  import os
-        
-  # do the UNIX double-fork 
-  # Decouple from user session terminal process
-  try:
-    pid = os.fork()
-    if pid: sys.exit(0) # exit first parent
-  except OSError, e:
-    logger.error("fork #1 failed: %d (%s)" % (e.errno, e.strerror))
-    sys.exit(1)
+    logger.info("Running as deamon")
+    # do the UNIX double-fork
+    # Decouple from user session terminal process
+    try:
+        pid = os.fork()
+        if pid:
+            sys.exit(0) # exit first parent
+    except OSError, e:
+        logger.error("fork #1 failed: %d (%s)" % (e.errno, e.strerror))
+        sys.exit(1)
 
-  # decouple from parent environment
-  os.chdir("/")   #don't prevent unmounting....
-  os.setsid()
-  os.umask(0)
+    # decouple from parent environment
+    os.chdir("/") #don't prevent unmounting...
+    os.setsid()
+    os.umask(0)
 
-  # do second fork
-  try:
-    pid = os.fork()
-    if pid:
-      # exit from second parent, print eventual PID before
-      if pidfile:    
-        open(pidfile, 'w').write("%d" % pid)
-        sys.exit(0)
-  except OSError, e:
-    logger.error("fork #2 failed: %d (%s)" % (e.errno, e.strerror))
-    sys.exit(1)
-    
-  fn()
+    # do second fork
+    try:
+        pid = os.fork()
+        if pid and pidfile:
+            pidfile_fp = open(pidfile, 'w')
+            pidfile_fp.write("%d" % pid)
+            pidfile_fp.close()
+            sys.exit(0)
+    except OSError, e:
+        logger.error("fork #2 failed: %d (%s)" % (e.errno, e.strerror))
+        sys.exit(1)
+    fn()
 
 
 def daemonize(really_run_as_deamon, pidfile=None):
     """Generator for creating a forked process
     from a function"""
-    
+
     signal_subscribe()
-    
     #Allows a parameter to configure
     if really_run_as_deamon:
-        def fn(): pass
+        def fn():
+            pass
         run_as_daemon(fn)
-    
+
     def wrap(f):
-      def wrapped_f(*args, **kwargs):
-          """Wrapper function to be returned from generator.
-          Executes the function bound to the generator and then
-          exits the process"""
-          f(*args, **kwargs)
+        def wrapped_f(*args, **kwargs):
+            """Wrapper function to be returned from generator.
+            Executes the function bound to the generator and then
+            exits the process"""
+            f(*args, **kwargs)
       return wrapped_f
     return wrap
 
@@ -74,7 +74,5 @@ def signal_subscribe():
 # signal_handler function only deals with process termination 
 def signal_handler(signum, frame):
     """Handle system signals"""
-    logger.info('Finalizando o programa!\n')  
+    logger.info('Closing the program!')
     exit()
-    
-
