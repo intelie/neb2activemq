@@ -1,5 +1,5 @@
 *.py~
 *.dat
 *.pyc
-.gitignore
+*.swp
 ipc2activemq/src/nebpublisher/conf/dev/c

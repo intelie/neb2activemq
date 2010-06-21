@@ -2,6 +2,7 @@
 import unittest
 import sys
 import cStringIO
+sys.path.append('../nebpublisher')
 import manager
 
 
