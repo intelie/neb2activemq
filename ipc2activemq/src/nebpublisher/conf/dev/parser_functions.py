@@ -19,7 +19,7 @@ class ParserFunctions:
         split_by_space = message.split()
 
         basic_event = {'eventtype': eventtype, 'state': split_by_space[1],
-                   'host': host}
+                       'host': host}
 
         if len(partitions) <= 1:
             if 'DISK %s' % basic_event['state'] == message:
@@ -37,7 +37,7 @@ class ParserFunctions:
                     new_event['partition'] = ' '.join(event_split[0].split()[:-2])
                     events.append(new_event)
                 return events
-        
+
         events = []
         for partition_info in partitions[1:]:
             #1463088 kB (74%) free on /]
@@ -57,7 +57,7 @@ class ParserFunctions:
             new_event['free_percent'] = percent
             events.append(new_event)
         return events
-        
+
 commands = {
     'check_passive':[{
         'labelFilter': 'cameras',

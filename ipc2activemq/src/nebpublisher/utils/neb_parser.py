@@ -3,11 +3,10 @@ import re
 import sys
 
 
-NOT_IMPLEMENTED=1
-BAD_FORMAT=2
-
-SERVICE_CHECK_MAP = { 0 : 'OK', 1 : 'WARNING', 2 : 'CRITICAL', 3 : 'UNKNOWN' }
-HOST_CHECK_MAP = { 0 : 'OK', 1 : 'CRITICAL', 2 : 'UNKNOWN' } 
+NOT_IMPLEMENTED = 1
+BAD_FORMAT = 2
+SERVICE_CHECK_MAP = {0 : 'OK', 1 : 'WARNING', 2 : 'CRITICAL', 3 : 'UNKNOWN'}
+HOST_CHECK_MAP = {0 : 'OK', 1 : 'CRITICAL', 2 : 'UNKNOWN'}
 
 logger = logging.getLogger("nebpublisher.parser")
 

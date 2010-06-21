@@ -18,7 +18,6 @@ conn.start()
 conn.connect()
 
 conn.subscribe(destination='/queue/events', ack='auto')
-
 #conn.send(' '.join(sys.argv[1:]), destination='/queue/test')
 
 while True:

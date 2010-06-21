@@ -36,7 +36,6 @@ class NagiosLog(object):
                ' '.join(line_by_spaces[1:3]) == 'HOST ALERT:' or \
                ' '.join(line_by_spaces[1:4]) == 'CURRENT HOST STATE:' or \
                ' '.join(line_by_spaces[1:4]) == 'CURRENT SERVICE STATE:':
-
         '''
 
         new_lines = []
@@ -209,12 +208,6 @@ if __name__ == '__main__':
     conf_dir = '/home/alvaro/intelie/*/config'
     log_conf = '../ipc2activemq/src/nebpublisher/conf/log.ini'
 
-    sys.path.append('/home/alvaro/intelie/igsetup/trunk/poa') #for topics and parser_functions
-    sys.path.append('../ipc2activemq/src/nebpublisher/utils') #for neb_parser
-    parent_dir = '/home/alvaro/intelie/igsetup/trunk/poa/analise'
-    conf_dir = '/home/alvaro/intelie/igsetup/trunk/poa/config'
-    log_conf = '../ipc2activemq/src/nebpublisher/conf/log.ini'
-
     if os.path.isfile(log_conf):
         print "configuring log from log.ini"
         logging.config.fileConfig(log_conf)
@@ -227,9 +220,7 @@ if __name__ == '__main__':
     import neb_parser
 
     nagios = NagiosLog('%s/nagios.log' % parent_dir)
-
     nagios.cleanup(save_in_file='%s/nagios-cleanup.log' % parent_dir)
-
     nagios.save_service_descriptions_in('%s/service_descriptions.txt' % parent_dir)
 
     conf_files = glob.glob(conf_dir + '/*.cfg')
@@ -237,9 +228,7 @@ if __name__ == '__main__':
     nagios.export_descriptions_and_commands_from_conf(conf_files, csvname)
 
     nagios.save_not_found_services('%s/nagios-inconsistent.txt' % parent_dir)
-
     nagios.remove_not_found_services(save='%s/nagios-cleanup-consistent.log' % parent_dir)
-
     commands_and_outputs = nagios.get_check_commands_and_outputs()
 
     commands_and_outputs = remove_duplicates(commands_and_outputs)
