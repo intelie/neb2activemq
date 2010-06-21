@@ -12,185 +12,182 @@ HOST_CHECK_MAP = { 0 : 'OK', 1 : 'CRITICAL', 2 : 'UNKNOWN' }
 logger = logging.getLogger("nebpublisher.parser")
 
 def count_not_none(groups) :
-  i = 0
-  for element in groups:
-    if element != None:
-      i = i + 1
-  return i
+    i = 0
+    for element in groups:
+        if element != None:
+            i = i + 1
+    return i
 
 
 class Parser():
-  
-  def __init__ (self, topics, parser_functions):
-    self.load_types()
-    self.topics = topics
-    self.parser_functions = parser_functions
-    
-    # this code was made to compile the regexps only once
-  
-    # iterate over command names
-    for key in self.topics.expressions:
-      topic = self.topics.expressions[key]
-      #iterate over items in command (labelFilter, eventtype level)
-      for item in topic:
-          # Append error regexps to each regexps array to catch known errors
-          for errorRegexp in topics.errorRegexps:
-            item['regexps'].append(errorRegexp)
+    def __init__ (self, topics, parser_functions):
+        self.load_types()
+        self.topics = topics
+        self.parser_functions = parser_functions
+        # this code was made to compile the regexps only once
 
-          #iterate over subitems (properties and regexps)
-          for subitem in item['regexps']:
-            #substitute text with compiled regexp
-            subitem['regexp'] = re.compile(subitem['regexp'])
-            
-      topics.expressions[key] = topic
-     
-    logger.debug("Compiled regexps structure: %s " % str(topics.expressions))
-      
-  """ This function loads the types and the functions responsible for
-      parsing each message event
-  """  
-  def load_types(self):
-    self.switch = {
-      13: self.parse_service_check,
-      14: self.parse_host_check,
-    }
+        # iterate over command names
+        for key in self.topics.expressions:
+            topic = self.topics.expressions[key]
+            #iterate over items in command (labelFilter, eventtype level)
+            for item in topic:
+                # Append error regexps to each regexps array to catch known errors
+                for errorRegexp in topics.errorRegexps:
+                    item['regexps'].append(errorRegexp)
+                    #iterate over subitems (properties and regexps)
+                for subitem in item['regexps']:
+                    #substitute text with compiled regexp
+                    subitem['regexp'] = re.compile(subitem['regexp'])
+            topics.expressions[key] = topic
+        logger.debug("Compiled regexps structure: %s " % \
+                     str(topics.expressions))
 
-  def parse(self, type, message):
-    try:
-      return self.switch[type](message)
-    except KeyError, e:
-      self.not_implemented_type(type)
-      return NOT_IMPLEMENTED
-    except Exception, e:
-      info = sys.exc_info()
-      import traceback
-      traceback.print_tb(info[2])
-      logger.warn('Unknown exception %s' % str(info))
-      exit(1)
+    def load_types(self):
+        """This function loads the types and the functions responsible for
+           parsing each message event
+        """
+        self.switch = {13: self.parse_service_check,
+                       14: self.parse_host_check}
 
-  def not_implemented_type(self, type):
-    logger.warn("Type %i has no parser." % type)
-    return
-  
-  def not_implemented_service(self, service):
-    logger.warn("Service %s has no parser." % service)
-    return
- 
-  def parse_service_check(self, message):
-    if message == None:
-      return BAD_FORMAT
+    def parse(self, type, message):
+        try:
+            return self.switch[type](message)
+        except KeyError, e:
+            self.not_implemented_type(type)
+            return NOT_IMPLEMENTED
+        except Exception, e:
+            info = sys.exc_info()
+            import traceback
+            traceback.print_tb(info[2])
+            logger.warn('Unknown exception %s' % str(info))
+            exit(1) #Houston!
 
-    logger.debug("Message %s - service check" % message)
-    data = []
-    data = message.split('^')
+    def not_implemented_type(self, type):
+        logger.warn("Type %i has no parser." % type)
+        return
 
-    if len(data) < 4:
-      return BAD_FORMAT
+    def not_implemented_service(self, service):
+        logger.warn("Service %s has no parser." % service)
+        return
 
-    host = data[0]
-    command_name = data[1]
-    state = data[2]
-    message = data[3]
+    def parse_service_check(self, message):
+        if message is None:
+            return BAD_FORMAT
+        logger.debug("Message %s - service check" % message)
+        data = []
+        data = message.split('^')
 
-    if len(host) == 0 or len(command_name) == 0  or len(state) == 0 or len(message) == 0:
-      return BAD_FORMAT
+        if len(data) < 4:
+            return BAD_FORMAT
 
-    logger.debug("Host %s - command_name %s - state %s - output %s" %(host, command_name, state, message))
+        host = data[0]
+        command_name = data[1]
+        state = data[2]
+        message = data[3]
 
-    if command_name in self.topics.expressions:        
-      topic = self.topics.expressions[command_name]
-      result = self.create_event_from_regexp(host, message, topic)
-      if result != BAD_FORMAT and result != NOT_IMPLEMENTED:
-        result['state'] =  SERVICE_CHECK_MAP[int(state)]
-        return [result]
-      return result
-      
-    elif command_name in self.parser_functions.commands:
-      command_parser_functions = self.parser_functions.commands[command_name]
-      events = self.create_events_from_parser_functions(host, message, command_parser_functions)
-      for event in events:
-        event['state'] = SERVICE_CHECK_MAP[int(state)]
-      return events
-    
-    logger.warn("Event type %s not registered as a topic" %(command_name))
-    return BAD_FORMAT
+        if not host or not command_name or not state or not message:
+            return BAD_FORMAT
 
+        logger.debug("Host %s - command_name %s - state %s - output %s" % \
+                     (host, command_name, state, message))
 
-  def parse_host_check(self, message):
-    if message == None or len(message) == 0:
+        if command_name in self.topics.expressions:
+            topic = self.topics.expressions[command_name]
+            result = self.create_event_from_regexp(host, message, topic)
+            if result != BAD_FORMAT and result != NOT_IMPLEMENTED:
+                result['state'] = SERVICE_CHECK_MAP[int(state)]
+                return [result]
+            return result
+        elif command_name in self.parser_functions.commands:
+            command_parser_functions = self.parser_functions.commands[command_name]
+            events = self.create_events_from_parser_functions(host, message, command_parser_functions)
+            for event in events:
+                event['state'] = SERVICE_CHECK_MAP[int(state)]
+            return events
+
+        logger.warn("Event type %s not registered as a topic" % command_name)
         return BAD_FORMAT
 
-    logger.debug("Message %s - host check" % message)
-    data = []
-    data = message.split('^')
-    if len(data) < 3:
-        return BAD_FORMAT
-    if (len(data[0]) == 0 or len(data[1]) == 0 or len(data[2]) == 0 ):
-        return BAD_FORMAT
-    host = data[0]
-    state = data[1]
-    output = data[2]
-    logger.debug("Host %s - output %s" % (host,output) ) 
-    topic = self.topics.expressions['host']
-    event = self.create_event_from_regexp(host, output, topic)
-    
-    if event != BAD_FORMAT and event != NOT_IMPLEMENTED:
-        event['state'] = HOST_CHECK_MAP[int(state)]
-        return [event]
-    return event
 
-  
-  def create_event_from_regexp(self, host, message, topic):
-    event = {'host' : host}
-    logger.debug('Message to be matched: %s \n Topic: %s' % (message, str(topic)))
-    
-    match = False
-    #iterate over items in command (labelFilter, eventtype level)
-    for item in topic:
-      if match == True:
-        # stop iterating over item
-        break  
-      if item['labelFilter'] != None and not message.startswith(item['labelFilter']):
-        logger.debug("Does not match with label")
-      else: 
-        #iterate over subitems (properties and regexps)
-        for subitem in item['regexps']:
-          r = subitem['regexp']
-          m = r.match(message)
-          if m != None: 
-            if count_not_none(m.groups()) != len(subitem['properties']):
-              logger.warn("Regexp has a different number of properties from expected")
+    def parse_host_check(self, message):
+        if not message:
+            return BAD_FORMAT
+
+        logger.debug("Message %s - host check" % message)
+        data = []
+        data = message.split('^')
+        if len(data) < 3:
+            return BAD_FORMAT
+        if not data[0] or not data[1] or not data[2]:
+            return BAD_FORMAT
+        host = data[0]
+        state = data[1]
+        output = data[2]
+        logger.debug("Host %s - output %s" % (host,output) ) 
+        topic = self.topics.expressions['host']
+        event = self.create_event_from_regexp(host, output, topic)
+
+        if event != BAD_FORMAT and event != NOT_IMPLEMENTED:
+            event['state'] = HOST_CHECK_MAP[int(state)]
+            return [event]
+        return event
+
+
+    def create_event_from_regexp(self, host, message, topic):
+        event = {'host' : host}
+        logger.debug('Message to be matched: %s \n Topic: %s' % (message, str(topic)))
+        match = False
+        #iterate over items in command (labelFilter, eventtype level)
+        for item in topic:
+            if match:
+                break
+            if item['labelFilter'] != None and \
+               not message.startswith(item['labelFilter']):
+                logger.debug("Does not match with label")
+            else: 
+                #iterate over subitems (properties and regexps)
+                for subitem in item['regexps']:
+                    r = subitem['regexp']
+                    m = r.match(message)
+                    if m != None: 
+                        if count_not_none(m.groups()) != len(subitem['properties']):
+                            logger.warn("Regexp has a different number of properties from expected")
+                        else:
+                            # if groups in regexp and the number of properties match consider it a match
+                            match = True
+                            event['eventtype'] = item['eventtype']
+                            event['description'] = message
+
+                            # if the regex contains an specific event type, override it
+                            if 'eventtype' in subitem and subitem['eventtype'] != None:
+                                event['eventtype'] = subitem['eventtype']
+
+                            i = 1 # first match is the whole expression
+                            for property in subitem['properties']:
+                                if m.group(i) != None:
+                                    event[property] = m.group(i)
+                                    i = i + 1
+                            # stop iterating over subitem
+                            break
+
+        logger.debug('event: %s' % str(event))
+        if match:
+            return event
+        else:
+            logger.warn('No expression for: %s' %(message))
+            return BAD_FORMAT
+
+
+    def create_events_from_parser_functions(self, host, message,
+                                            command_parser_functions):
+        for parser_function_struct in command_parser_functions:
+            #if not message.startswith(parser_function_struct['labelFilter'] or ''):
+            if parser_function_struct['labelFilter'] == None or \
+               not message.startswith(parser_function_struct['labelFilter']):
+                logger.debug("Does not match with label")
+                return []
             else:
-              # if groups in regexp and the number of properties match consider it a match
-              match = True
-              event['eventtype'] = item['eventtype']
-              event['description'] = message
-
-              # if the regex contains an specific event type, override it
-              if 'eventtype' in subitem and subitem['eventtype'] != None:
-                event['eventtype'] = subitem['eventtype']
-
-              i = 1 # first match is the whole expression
-              for property in subitem['properties']:
-                if m.group(i) != None:
-                  event[property] = m.group(i)
-                  i = i + 1
-              # stop iterating over subitem
-              break
-      
-    logger.debug('event: %s' % str(event))
-    if match == True:
-      return event
-    else:
-      logger.warn('No expression for: %s' %(message))
-      return BAD_FORMAT
-      
-  def create_events_from_parser_functions(self, host, message, command_parser_functions):
-    for parser_function_struct in command_parser_functions:
-      if parser_function_struct['labelFilter'] == None or not message.startswith(parser_function_struct['labelFilter']):
-      #if not message.startswith(parser_function_struct['labelFilter'] or ''):
-        logger.debug("Does not match with label")
-        return []
-      else:
-        events = parser_function_struct['function'](host, message, parser_function_struct['eventtype'], parser_function_struct['labelFilter'])
-        return events
+                get_events = parser_function_struct['function']
+                event_type = parser_function_struct['eventtype']
+                label_filter = parser_function_struct['labelFilter']
+                return get_events(host, message, event_type, label_filter)
