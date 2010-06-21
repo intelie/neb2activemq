@@ -2,3 +2,4 @@
 *.dat
 *.pyc
 .gitignore
+ipc2activemq/src/nebpublisher/conf/dev/c
