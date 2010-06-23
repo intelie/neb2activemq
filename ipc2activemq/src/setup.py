@@ -11,5 +11,5 @@ setup(
     packages=['nebpublisher', 'nebpublisher.utils'],
     scripts=['nebpublisher.py'],
     data_files=[('/etc/init.d', ['nebpublisher.sh']),
-                ('nebpublisher/conf','nebpublisher/conf/log.ini')],
-)
+                ('nebpublisher/conf', ['nebpublisher/conf/log.ini'])],
+    )
