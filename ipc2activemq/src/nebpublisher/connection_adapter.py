@@ -1,3 +1,6 @@
+import stomp
+
+
 class ConnectionAdapter(object):
     """Integrates with a the STOMP client API.
     ConnectionAdapter is an easy-to-use way to send messages via stomp

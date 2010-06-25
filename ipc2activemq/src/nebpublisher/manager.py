@@ -42,6 +42,7 @@ class Manager(object):
         self.settings = settings
         self.topics = topics
         self.parser_functions = parser_functions
+        
         #queue to send results to broker
         self.queue = Queue.Queue(settings.MAX_QUEUE_SIZE)
         try:
@@ -57,6 +58,7 @@ class Manager(object):
                                      self.parser, self.queue)
         self.subscriber.start()
         self.processor = QueueProcessor(self.queue, self.settings)
+        
         #main thread will be processing
         self.processor.process()
 
@@ -75,6 +77,7 @@ class Subscriber(threading.Thread):
         while True:
             try:
                 logger.debug("Waiting for a OS message:")
+                
                 #This reception blocks until some new message appears. Other option is to use flag IPC_NOWAIT
                 message, message_type = self.mq.receive()
                 message = str(message)
@@ -89,7 +92,7 @@ class Subscriber(threading.Thread):
                         if event != neb_parser.NOT_IMPLEMENTED and event != neb_parser.BAD_FORMAT:
                             self.publish(event)
 
-             except sysv_ipc.PermissionsError, sysv_ipc.ExistentialError:
+            except sysv_ipc.PermissionsError, sysv_ipc.ExistentialError:
                 logger.error("Message could not be received. Check if os queue exist and its permission")
                 time.sleep(self.settings.OS_MQ_SLEEP)
                 pass
@@ -106,6 +109,7 @@ class Subscriber(threading.Thread):
         self.header.update({'timestamp': long(time.time())*1000})
         self.header.update({'eventtype': event['eventtype'] })
         del event['eventtype']
+        
         # Do not use references to avoid queue mismatches
         header = copy.copy(self.header)
         body = copy.copy(event)
