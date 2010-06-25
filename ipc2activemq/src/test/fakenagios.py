@@ -5,7 +5,7 @@ import time
 import datetime
 
 
-def send_message(message):
+def send_message(mq, message):
     print message
     try:
         mq.send(message, block=False, type=13)
