@@ -14,29 +14,15 @@ import json
 from utils import neb_parser
 import stomp #stomp have an utils.py! Import AFTER neb_parser
 
-#TODO Move this to settings or to an environment option 
-PROFILE_MEM = False
 
 logger = logging.getLogger("nebpublisher.manager")
-memlogger = logging.getLogger("nebpublisher.memprofiler")
+
 
 try:
     import chardet
 except ImportError:
     logger.error('chardet is not installed - manager will discard all messages \
 if UnicodeDecodeError is raised')
-
-
-#used only to profile Memory usage
-if PROFILE_MEM:
-    try:
-        import guppy.heapy.heapyc
-        from guppy import hpy
-    except ImportError:
-        logger.error("Couldn't import Guppy module.")
-        PROFILE_MEM = False
-    # time in seconds for memory reports to be logged
-    interval = 60
 
 
 try:
@@ -84,16 +70,8 @@ class Subscriber(threading.Thread):
         self.parser = parser
         self.queue = queue
         self.header = settings.DESTINATION
-        if PROFILE_MEM:
-            memlogger.debug("Initiating memory profiler for subscriber")
-            self.hp = hpy()
-
-
+ 
     def run (self):
-        if PROFILE_MEM :
-            time_ref = time.time()
-            self.hp.setrelheap()
-
         while True:
             try:
                 logger.debug("Waiting for a OS message:")
@@ -111,11 +89,7 @@ class Subscriber(threading.Thread):
                         if event != neb_parser.NOT_IMPLEMENTED and event != neb_parser.BAD_FORMAT:
                             self.publish(event)
 
-                if PROFILE_MEM:
-                    if time.time() > time_ref + interval:
-                        memlogger.debug(self.hp.heap())
-                        time_ref = time.time()
-            except sysv_ipc.PermissionsError, sysv_ipc.ExistentialError:
+             except sysv_ipc.PermissionsError, sysv_ipc.ExistentialError:
                 logger.error("Message could not be received. Check if os queue exist and its permission")
                 time.sleep(self.settings.OS_MQ_SLEEP)
                 pass
@@ -234,16 +208,6 @@ class ConnectionAdapter(object):
         connection.start()
         connection.connect()
         self.conn = connection
-        #What do we need it for?
-        #except Exception:
-        #  if type(sys.exc_info()[1]) == types.TupleType:
-        #    exc = sys.exc_info()[1][1]
-        #  else:
-        #    exc = sys.exc_info()[1]
-        #    logger.error('Unexpected error %s.' % (exc))
-        #    return connection
-        #else:
-        #  return connection
 
 
 class ErrorListener(stomp.ConnectionListener):
