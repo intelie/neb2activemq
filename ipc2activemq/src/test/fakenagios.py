@@ -5,7 +5,7 @@ import time
 import datetime
 
 
-def send_message(message):
+def send_message(mq, message):
     print message
     try:
         mq.send(message, block=False, type=13)
@@ -17,13 +17,13 @@ def send_messages(mq, service_counter, status_counter, test_service):
         for key, item in test_service.iteritems():
             if type(item) == str:
                 message = 'riold122^%s^%s^%s\0' % (key, status_counter, item)
-                send_message(message)
+                send_message(mq, message)
             elif type(item) == list:
                 for msg in item:
                     message = 'riold122^%s^%s^%s\0' % (key, status_counter, msg)
-                    send_message(message)
-    except:
-        print "Something happened. Ignoring."
+                    send_message(mq, message)
+    except Exception as e:
+        print "Caugh an unknown exception, ignoring.", e
         pass
 
 
