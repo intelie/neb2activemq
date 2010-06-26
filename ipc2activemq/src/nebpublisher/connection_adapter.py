@@ -1,4 +1,10 @@
 import stomp
+import logging
+import time
+import sys
+
+
+logger = logging.getLogger("nebpublisher.manager")
 
 
 class ConnectionAdapter(object):
@@ -49,7 +55,7 @@ class ErrorListener(stomp.ConnectionListener):
 
 if __name__ == '__main__':
     print 'Testing...'
-    brokers = [('192.168.0.44', 61613), ('192.168.0.77', 61613)]
+    brokers = [('127.0.0.1', 61613)]
     conn = ConnectionAdapter(brokers, 0)
     while True:
         try:

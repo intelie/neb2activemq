@@ -22,8 +22,8 @@ def send_messages(mq, service_counter, status_counter, test_service):
                 for msg in item:
                     message = 'riold122^%s^%s^%s\0' % (key, status_counter, msg)
                     send_message(mq, message)
-    except Exception as excep:
-        print excep, "Ignoring."
+    except Exception, e:
+        print e, "Ignoring."
         pass
 
 

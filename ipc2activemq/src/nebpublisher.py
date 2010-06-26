@@ -9,7 +9,7 @@ from nebpublisher.utils.misc import run_as_daemon
 import cProfile
 
 PIDFILE = os.path.join(os.path.abspath(os.path.dirname(__file__)), '/usr/local/nagios/var/nebpublisher.pid')
-DAEMON = True
+DAEMON = False
 PROFILE = False
 ENV = "dev"
 
