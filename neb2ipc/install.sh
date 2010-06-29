@@ -1,6 +1,10 @@
 #!/bin/bash
 
+# NEB2IPC MODULE
+# INSTALLATION SCRIPT FROM THE SOURCE CODE
 
+
+#PATHS RECOMMENDED BY NAGIOS DOCUMENTATION
 NAGIOS_PATH="/usr/local/nagios"
 NAGIOS_DAEMON="/etc/init.d/nagios"
 NEB2IPC_DIR="."
@@ -59,4 +63,5 @@ then
   exit 0
 else
   echo "[MESSAGE QUEUE NOT FOUND.]"
+  exit -1
 fi
