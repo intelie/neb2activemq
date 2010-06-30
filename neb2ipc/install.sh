@@ -13,17 +13,27 @@ NAGIOS_CFG="${NAGIOS_PATH}/etc/nagios.cfg"
 LINE_TO_ADD="broker_module=${NAGIOS_BIN}/neb2ipc.o"
 
 
+#SMOKE TESTING
+if [ ! -f "${NAGIOS_PATH}/bin/nagios" ]
+then
+  echo "[Nagios binary not found in ${NAGIOS_PATH}/bin]"
+  echo "[HAVE YOU INSTALLED NAGIOS?]"
+  exit -1
+fi
+
+
 #NEB2IPC COMPILATION
 cd $NEB2IPC_DIR
-echo "[EXECUTING MAKE...]"
+echo "[Executing make...]"
 make
 
 if [ -f neb2ipc.o ]
 then
-  echo "[MOVING OBJECT FILE neb2ipc.o]"
+  echo "[Moving object neb2ipc.o]"
   sudo -u nagios cp neb2ipc.o $NAGIOS_BIN
 else
-  echo "[FILE neb2ipc.o NOT FOUND. ABORTING]"
+  echo "[File neb2ipc.o not found]"
+  echo "[ABORTING]"
   exit -1
 fi
 
@@ -32,7 +42,7 @@ fi
 NEB2IPC_COMMENT=`cat $NAGIOS_CFG | grep -on "#broker_module.*neb2ipc.o"`
 if [ -n "$NEB2IPC_COMMENT" ]
 then
-  echo "[FOUND A COMMENTED LINE FOR neb2ipc.o BROKER. REMOVING.]"
+  echo "[Found a commented line in neb2ipc.o broker, REMOVING]"
   sudo sed -i "/^#broker_module.*neb2ipc.o/d" $NAGIOS_CFG
 fi
 
@@ -42,14 +52,14 @@ then
 	BROKER_LINE=`cat $NAGIOS_CFG | grep -no "broker_module=" | cut -d: -f1 | tail -1`
   if [ -n "$BROKER_LINE" ]
   then
-    echo "[ADDING neb2ipc.o reference INTO nagios.cfg]"
+    echo "[Adding neb2ipc.o reference into nagios.cfg]"
     sudo sed -i "${BROKER_LINE}a${LINE_TO_ADD}" $NAGIOS_CFG
   else
-    echo "[BROKER_MODULE SESSION NOT FOUND. ABORTING.]"
+    echo "[Broker module session not found, ABORTING]"
     exit -1
   fi
 else
-  echo "[REFERENCE TO neb2ipc.o FOUND IN nagios.cfg]"
+  echo "[Reference to neb2ipc.o already existfound in nagios.cfg]"
 fi
 
 
@@ -58,12 +68,12 @@ echo "[RESTARTING NAGIOS]"
 sudo ${NAGIOS_DAEMON} restart
 
 
-#SIMPLE CHECK IF WAS SUCCESSFUL
+#SIMPLE CHECK IF IT WAS SUCCESSFUL
 QUEUE_EXISTS=`sudo ipcs | grep "0x0001e240.*nagios"` 
 if [ -n "$QUEUE_EXISTS" ]
 then
   echo "[MESSAGE QUEUE CREATED SUCCESSFULLY!]"
-  echo "[NEB2IPC SEEMS TO BE CORRECTLY INSTALLED. ENJOY!]"
+  echo "[NEB2IPC SEEMS TO BE CORRECTLY INSTALLED, ENJOY!]"
   exit 0
 else
   echo "[MESSAGE QUEUE NOT FOUND.]"
