@@ -18,10 +18,14 @@ cd $NEB2IPC_DIR
 echo "[EXECUTING MAKE...]"
 make
 
-
-#TODO: check if .o was successfully generated.
-echo "[MOVING OBJECT FILE neb2ipc.o]"
-sudo cp neb2ipc.o $NAGIOS_BIN
+if [ -f neb2ipc.o ]
+then
+  echo "[MOVING OBJECT FILE neb2ipc.o]"
+  sudo -u nagios cp neb2ipc.o $NAGIOS_BIN
+else
+  echo "[FILE neb2ipc.o NOT FOUND. ABORTING]"
+  exit -1
+fi
 
 
 #UPDATES NAGIOS.CFG
@@ -45,7 +49,7 @@ then
     exit -1
   fi
 else
-  echo "[REFERENCE TO neb2ipc.o FOUND]"
+  echo "[REFERENCE TO neb2ipc.o FOUND IN nagios.cfg]"
 fi
 
 
