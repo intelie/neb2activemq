@@ -17,7 +17,7 @@ else
   ./configure
   make
   make test
-  sudo make altinstall 
+  sudo -u nagios make altinstall 
   if [ $? = 0 ]
   then
     which python2.6 &>/dev/null

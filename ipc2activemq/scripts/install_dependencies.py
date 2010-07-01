@@ -2,13 +2,12 @@ import os
 
 
 # PYTHON PACKAGES DEPENDENCIES INSTALLATION
-# execute with sudo
 
 packages = [{"stomp": "stomp.py-2.0.4"}, {"sysv_ipc": "sysv_ipc-0.5.2"}, {"chardet": "python2-chardet-2.0.1"}]
 
 
-#TODO: install python2.6
 #TODO: check version
+
 
 def install(package_name, file_version):
   try: 
@@ -26,7 +25,7 @@ def install(package_name, file_version):
       print "[ABORTING.]"
       exit(-1)
     os.chdir(file_version)
-    os.system('python2.6 setup.py install')
+    os.system('sudo -u nagios python2.6 setup.py install')
     os.system('rm -rf %s' % file_version)
     os.chdir("..")
     try:
