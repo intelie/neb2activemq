@@ -1,6 +1,0 @@
-include README
-include nebpublisher/conf/log.ini
-include nebpublisher.sh
-recursive-include nebpublisher *.py
-recursive-include test *.py
-
