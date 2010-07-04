@@ -22,7 +22,9 @@ tar -xzvf *.tar.gz
 rm -rf *.tar.gz
 
 cd ..
-mkdir neb2activemq
+mkdir -p neb2activemq/scripts
+cp ../scripts/install.sh neb2activemq/scripts/
+
 cp -r neb2ipc ipc2activemq neb2activemq
 tar -czvf neb2activemq.tar.gz neb2activemq
-rm -rf neb2activemq ipc2activemq neb2ipc
+rm -rf neb2activemq ipc2activemq neb2ipc scripts
