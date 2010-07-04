@@ -2,4 +2,4 @@
 
 cd ..
 mkdir -p dist
-tar -czvf dist/neb2ipc.tar.gz Makefile neb2ipc.c include/*.h scripts/install.sh
+tar -czvf dist/neb2ipc.tar.gz src/Makefile src/neb2ipc.c src/include/*.h scripts/install.sh

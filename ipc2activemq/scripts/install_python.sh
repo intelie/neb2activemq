@@ -1,5 +1,7 @@
-#SCRIPT FOR PYTHON 2.6 INSTALLATION
-#TODO: validate this script on CENTOS
+#!/bin/bash
+
+# SCRIPT FOR PYTHON 2.6 INSTALLATION
+# TODO: validate this script on CENTOS
 
 
 
@@ -16,12 +18,12 @@ else
   cd Python-2.6.5
   ./configure
   make
-  make test
-  sudo -u nagios make altinstall 
+  sudo make altinstall 
+  cd ../../scripts
   if [ $? = 0 ]
   then
     which python2.6 &>/dev/null
-    if [ $? -eq 0 ]
+    if [ $? = 0 ]
     then 
       echo "[PYTHON2.6 INSTALLED SUCCESSFULLY!]"
       exit 0
