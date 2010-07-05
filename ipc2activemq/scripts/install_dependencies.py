@@ -4,7 +4,7 @@ import os
 # PYTHON PACKAGES DEPENDENCIES INSTALLATION
 
 
-packages = [{"stomp": "stomp.py-2.0.4"}, {"sysv_ipc": "sysv_ipc-0.5.2"}, {"chardet": "python2-chardet-2.0.1"}]
+packages = [{"stomp": "stomp.py-2.0.4"}, {"sysv_ipc": "sysv_ipc-0.6.1"}, {"chardet": "python2-chardet-2.0.1"}]
 
 
 #TODO: check version
