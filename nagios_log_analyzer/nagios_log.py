@@ -88,6 +88,8 @@ class NagiosLog(object):
                 for service in services:
                     description = service.split('service_description')[1].split('\n')[0].strip()
                     command = service.split('check_command')[1].split('\n')[0].strip()
+                    if command.startswith('check_nrpe!'):
+                        command = command.split('!')[1]
                     services_and_commands[description] = command
                 file_object.close()
             self.descriptions_and_commands = services_and_commands
@@ -146,6 +148,8 @@ class NagiosLog(object):
             for i, line in enumerate(self.lines):
                 info = ': '.join(line.split(': ')[1:]).split(';')
                 check_command = self.descriptions_and_commands[info[1]].split('!')[0]
+                if check_command == 'check_nrpe':
+                    check_command = self.descriptions_and_commands[info[1]].split('!')[1]
                 if 'CURRENT HOST STATE:' in line:
                     check_output = ';'.join(info[4:]).replace('\n', '')
                     state = info[3]
@@ -201,11 +205,11 @@ if __name__ == '__main__':
     import logging, logging.config
     import sys
     #For Intelie developers: change '*' in the next lines for the datacenter path
-    sys.path.append('/home/alvaro/intelie/*') #for topics and parser_functions
+    sys.path.append('/home/alvaro/Intelie/Code/*') #for topics and parser_functions
     #sys.path.append('../ipc2activemq/src/nebpublisher/conf/dev') #for topics if none above
     sys.path.append('../ipc2activemq/src/nebpublisher/utils') #for neb_parser
-    parent_dir = '/home/alvaro/intelie/*/analise'
-    conf_dir = '/home/alvaro/intelie/*/config'
+    parent_dir = '/home/alvaro/Intelie/Code/*/analise'
+    conf_dir = '/home/alvaro/Intelie/Code/*/config'
     log_conf = '../ipc2activemq/src/nebpublisher/conf/log.ini'
 
     if os.path.isfile(log_conf):
@@ -240,6 +244,7 @@ if __name__ == '__main__':
     not_parsed = []
 
     check_command_count = {}
+    check_command_count_not_parsed = {}
     for cmd_out in commands_and_outputs:
         command = cmd_out['check_command']
         output  = cmd_out['output']
@@ -251,18 +256,29 @@ if __name__ == '__main__':
         else:
             check_command_count[command] = 1
 
-        print message
         parsed = my_parser.parse(13, message)
         if parsed != neb_parser.BAD_FORMAT:
+            print message
             print command, parsed
             print ''
             total_parsed += 1
         else:
+            if command in check_command_count_not_parsed:
+                check_command_count_not_parsed[command] += 1
+            else:
+                check_command_count_not_parsed[command] = 1
             not_parsed.append(cmd_out)
 
     not_parsed = remove_duplicates(not_parsed)
     not_parsed_grouped = group_commands(not_parsed)
     write_grouped_commands(not_parsed_grouped, '%s/not_parsed_grouped.txt' % parent_dir)
+
+    if len(not_parsed):
+        print ''
+        print '--- Events not parsed:'
+        for event in not_parsed:
+            print '    %s' % event
+            print ''
 
     total_events = len(commands_and_outputs)
     percentual = 100 * float(total_parsed) / total_events if total_events != 0 \
@@ -271,21 +287,26 @@ if __name__ == '__main__':
     print '--- Total of parsed events: %d (%f%%)' % (total_parsed, percentual)
 
     print '--- Check command count:'
-    print '    ' + u'\u02cf' + u'\u02cd' * 77 + u'\u02ce'
-    print '    |      SERVICE DESCRIPTION      |         CHECK COMMAND         | # OF EVENTS |'
-    print '    |' + u'\u02c9' * 31 + '|' + u'\u02c9' * 31 + '|' + u'\u02c9' * 13 + '|'
+    print '      ' + u'\u02cf' + u'\u02cd' * 96 + u'\u02ce'
+    print '      |      SERVICE DESCRIPTION      |         CHECK COMMAND         | # OF EVENTS (not parsed/total) |'
+    print '      |' + u'\u02c9' * 31 + '|' + u'\u02c9' * 31 + '|' + u'\u02c9' * 32 + '|'
+
+    yes = u'\u2713' #unicode rules
+    no = u'\u2717'
+
     for description, full_command in nagios.descriptions_and_commands.iteritems():
         command = full_command.split('!')[0]
+        if command == 'check_nrpe':
+            command = full_command.split('!')[1]
         if command in check_command_count:
-            value = str(check_command_count[command])
+            if command in check_command_count_not_parsed:
+                not_parsed_count = str(check_command_count_not_parsed[command])
+            else:
+                not_parsed_count = '0'
+            value = not_parsed_count + '/' + str(check_command_count[command])
         else:
             value = '(!) 0'
-        print '    | %29s | %29s | %11s |' % (description, command, value)
-    print '    ' + u'\u02cb' + u'-' * 77 + u'\u02ca'
-
-    if len(not_parsed):
-        print ''
-        print '--- Events not parsed:'
-        for event in not_parsed:
-            print '    %s' % event
-            print ''
+        print '      | %29s | %29s | %s %28s |' % (description, command,
+                                                   yes if not_parsed_count == '0' else no,
+                                                   value)
+    print '      ' + u'\u02cb' + u'-' * 96 + u'\u02ca'
