@@ -15,13 +15,22 @@ Dependencies
 
 This software depends on:
 
-- Python 2.6: http://www.python.org/download/
+- [Python 2.6](http://www.python.org/download/)
 
-- sysv_ipc: http://pypi.python.org/pypi/sysv_ipc
-  Just execute: # easy_install sysv_ipc
+- [sysv_ipc](http://pypi.python.org/pypi/sysv_ipc)
 
-- stomppy: http://stomppy.googlecode.com/
-  Download, unpack and execute: # python2.6 setup.py install
+  Just execute as root:
 
-- chardet: http://chardet.feedparser.org/
-  Download, unpack and execute: # python2.6 setup.py install
+    `pip install sysv_ipc`
+
+- [stomppy](http://stomppy.googlecode.com/)
+
+  Download, unpack and execute as root:
+
+    `python2.6 setup.py install`
+
+- [chardet](http://chardet.feedparser.org/)
+
+  Download, unpack and execute as root:
+
+    `python2.6 setup.py install`
