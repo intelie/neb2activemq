@@ -205,11 +205,11 @@ if __name__ == '__main__':
     import logging, logging.config
     import sys
     #For Intelie developers: change '*' in the next lines for the datacenter path
-    sys.path.append('/home/alvaro/Intelie/Code/*') #for topics and parser_functions
+    sys.path.append('/home/alvaro/Intelie/Code/buscape') #for topics and parser_functions
     #sys.path.append('../ipc2activemq/src/nebpublisher/conf/dev') #for topics if none above
     sys.path.append('../ipc2activemq/src/nebpublisher/utils') #for neb_parser
-    parent_dir = '/home/alvaro/Intelie/Code/*/analise'
-    conf_dir = '/home/alvaro/Intelie/Code/*/config'
+    parent_dir = '/home/alvaro/Intelie/Code/buscape/analise'
+    conf_dir = '/home/alvaro/Intelie/Code/buscape/config'
     log_conf = '../ipc2activemq/src/nebpublisher/conf/log.ini'
 
     if os.path.isfile(log_conf):
