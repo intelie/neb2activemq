@@ -86,7 +86,10 @@ class NagiosLog(object):
                 content = file_object.read()
                 services = content.split('define service')[1:]
                 for service in services:
-                    description = service.split('service_description')[1].split('\n')[0].strip()
+                    try:
+                        description = service.split('service_description')[1].split('\n')[0].strip()
+                    except IndexError:
+                        continue
                     command = service.split('check_command')[1].split('\n')[0].strip()
                     if command.startswith('check_nrpe!'):
                         command = command.split('!')[1]
@@ -204,12 +207,20 @@ if __name__ == '__main__':
     import os
     import logging, logging.config
     import sys
+    import fnmatch
+
+    def get_all_files(directory, pattern):
+        filepaths = []
+        for dirpath, dirnames, filenames in os.walk(directory):
+            for f in fnmatch.filter(filenames, pattern):
+                filepaths.append(os.path.join(dirpath, f))
+        return filepaths
+
     #For Intelie developers: change '*' in the next lines for the datacenter path
-    sys.path.append('/home/alvaro/Intelie/Code/buscape') #for topics and parser_functions
-    #sys.path.append('../ipc2activemq/src/nebpublisher/conf/dev') #for topics if none above
+    sys.path.append('/path/to/topics.py') #for topics and parser_functions
     sys.path.append('../ipc2activemq/src/nebpublisher/utils') #for neb_parser
-    parent_dir = '/home/alvaro/Intelie/Code/buscape/analise'
-    conf_dir = '/home/alvaro/Intelie/Code/buscape/config'
+    parent_dir = '/path/to/analysis/directory'
+    conf_dir = '/path/to/config/directory'
     log_conf = '../ipc2activemq/src/nebpublisher/conf/log.ini'
 
     if os.path.isfile(log_conf):
@@ -227,7 +238,7 @@ if __name__ == '__main__':
     nagios.cleanup(save_in_file='%s/nagios-cleanup.log' % parent_dir)
     nagios.save_service_descriptions_in('%s/service_descriptions.txt' % parent_dir)
 
-    conf_files = glob.glob(conf_dir + '/*.cfg')
+    conf_files = get_all_files(conf_dir, '*.cfg')
     csvname = '%s/nagios-service_descriptions-and-commands.csv' % parent_dir
     nagios.export_descriptions_and_commands_from_conf(conf_files, csvname)
 
@@ -306,6 +317,7 @@ if __name__ == '__main__':
             value = not_parsed_count + '/' + str(check_command_count[command])
         else:
             value = '(!) 0'
+            not_parsed_count = '0'
         print '      | %29s | %29s | %s %28s |' % (description, command,
                                                    yes if not_parsed_count == '0' else no,
                                                    value)
