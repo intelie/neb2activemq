@@ -1,7 +1,7 @@
 neb2activemq
 ============
 
-This project is composed of two separated systems.
+This project is composed of two separated systems: NEB2IPC and IPC2ACTIVEMQ.
 
 The first uses Nagios Event Broker to collect service checks data and send this info through IPC using a UNIX message queue. This was written in C.
 
