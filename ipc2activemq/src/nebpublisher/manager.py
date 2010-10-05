@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 
 import sys
 import types
@@ -11,7 +11,6 @@ import socket
 import copy
 import json
 from utils import neb_parser
-import stomp #stomp have an utils.py! Import AFTER neb_parser
 from connection_adapter import *
 
 
@@ -27,7 +26,7 @@ if UnicodeDecodeError is raised')
 
 try:
     import sysv_ipc
-except ImportError: 
+except ImportError:
     logger.error("Could not import sysv_ipc. See README for installation instructions.")
     exit(1)
 
@@ -35,14 +34,14 @@ except ImportError:
 class Manager(object):
     """ Responsible for initializing components:
          - OS message queue subscriber and parses (Subscriber)
-         - Actimq sender via stomp (QueueProcessor)
+         - ActiveMQ sender via stomp (QueueProcessor)
     """
     def __init__(self, settings, topics, parser_functions):
         logger.debug("Initiating Manager")
         self.settings = settings
         self.topics = topics
         self.parser_functions = parser_functions
-        
+
         #queue to send results to broker
         self.queue = Queue.Queue(settings.MAX_QUEUE_SIZE)
         try:
@@ -53,12 +52,12 @@ class Manager(object):
             exit(1)
 
         #start execution
-        self.parser = neb_parser.Parser(self.topics, self.parser_functions)  
+        self.parser = neb_parser.Parser(self.topics, self.parser_functions)
         self.subscriber = Subscriber("subscriber", self.mq, settings,
                                      self.parser, self.queue)
         self.subscriber.start()
         self.processor = QueueProcessor(self.queue, self.settings)
-        
+
         #main thread will be processing
         self.processor.process()
 
@@ -72,12 +71,12 @@ class Subscriber(threading.Thread):
         self.parser = parser
         self.queue = queue
         self.header = settings.DESTINATION
- 
+
     def run (self):
         while True:
             try:
                 logger.debug("Waiting for a OS message:")
-                
+
                 #This reception blocks until some new message appears. Other option is to use flag IPC_NOWAIT
                 message, message_type = self.mq.receive()
                 message = str(message)
@@ -109,7 +108,7 @@ class Subscriber(threading.Thread):
         self.header.update({'timestamp': long(time.time())*1000})
         self.header.update({'eventtype': event['eventtype'] })
         del event['eventtype']
-        
+
         # Do not use references to avoid queue mismatches
         header = copy.copy(self.header)
         body = copy.copy(event)
@@ -143,7 +142,14 @@ class QueueProcessor(object):
                     logger.debug("HEADER %s" % str(header))
                     logger.debug("BODY %s" % str(body))
                     sent = False
-                    logger.debug("New message taken from queue %s %s" % (str(header), str(body) ) )
+                    logger.debug("New message taken from queue %s %s" % \
+                                 (str(header), str(body)))
+                    if 'host' in body and 'FILTER_HOSTS' in dir(self.settings) \
+                       and self.settings.FILTER_HOSTS \
+                       and body['host'] not in self.settings.ALLOWED_HOSTS:
+                        logger.debug('Host filter is enabled and host "%s" is not in the list - discarding event!' % \
+                                     body['host'])
+                        continue
                 try:
                     msg = json.dumps(body)
                 except UnicodeDecodeError:
@@ -171,9 +177,9 @@ Discarding message. Exception: %s; Message: %s" %  (str(sys.exc_info()), err))
                 exit(0)
             except socket.error:
                 #try to reconnect
-                logger.error("Socket error >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                logger.error("Socket error!")
                 self.connection = ConnectionAdapter(self.settings.BROKER,
-                                                    self.settings.CONN_SLEEP_DELAY)
+                        self.settings.CONN_SLEEP_DELAY)
             except Exception, e:
                 logger.error('Unknown exception %s' % str(sys.exc_info()))
                 #TODO: Maybe retry

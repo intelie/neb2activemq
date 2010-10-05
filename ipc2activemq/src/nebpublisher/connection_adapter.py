@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import stomp
 import logging
 import time
@@ -9,7 +11,7 @@ logger = logging.getLogger("nebpublisher.manager")
 
 class ConnectionAdapter(object):
     """
-      Adapter to send messages to activemq through STOMP.       
+      Adapter to send messages to ActiveMQ through STOMP.
     """
     def __init__(self, broker, conn_sleep_delay):
         self.broker = broker
@@ -55,7 +57,7 @@ class ErrorListener(stomp.ConnectionListener):
 
 if __name__ == '__main__':
     print 'Testing...'
-    brokers = [('127.0.0.1', 61613), ('127.0.0.1', 61613)]
+    brokers = [('127.0.0.1', 61613)]
     conn = ConnectionAdapter(brokers, 0)
     while True:
         try:

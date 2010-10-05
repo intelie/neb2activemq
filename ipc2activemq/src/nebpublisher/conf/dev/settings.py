@@ -17,3 +17,6 @@ OS_MQ_KEY=123456 # id to be used on OS message queue creation
 #Local configuration for testing purposes
 EVENT_TYPE = 'eventtype'
 DESTINATION = {'destination': '/queue/events'} # will be inherited for each config
+
+FILTER_HOSTS = False
+ALLOWED_HOSTS = tuple()
