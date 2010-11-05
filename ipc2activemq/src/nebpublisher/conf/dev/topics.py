@@ -16,6 +16,16 @@ errorRegexps = [
 ]
 
 expressions = {
+    'check_log': [
+        {'labelFilter': None,
+         'eventtype': 'Log',
+         'regexps': [
+            {'properties': ['entire_log_line'],
+             'regexp': r"(.*)"
+            }
+         ]
+        }
+    ],
     'check_cpu': [
         {'labelFilter': 'CPU',
          'eventtype': 'CPU',

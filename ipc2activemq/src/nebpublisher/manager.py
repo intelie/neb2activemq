@@ -12,10 +12,14 @@ import copy
 import json
 from utils import neb_parser
 from connection_adapter import *
+import threading
+import glob
+import os
+import socket
 
 
 logger = logging.getLogger("nebpublisher.manager")
-
+hostname = socket.gethostname()
 
 try:
     import chardet
@@ -24,89 +28,100 @@ except ImportError:
 if UnicodeDecodeError is raised')
 
 
-try:
-    import sysv_ipc
-except ImportError:
-    logger.error("Could not import sysv_ipc. See README for installation instructions.")
-    exit(1)
+class FileMonitor(threading.Thread):
+    def __init__(self, filename, wildcard, stat_check_time=1):
+        threading.Thread.__init__(self)
+        self.wildcard = wildcard
+        self.filename = filename
+        self.stat_check_time = stat_check_time
 
+        self.should_run = threading.Event()
+        self.new_file = threading.Event()
+        self.should_run.set()
+        self.new_file.clear()
 
-class Manager(object):
-    """ Responsible for initializing components:
-         - OS message queue subscriber and parses (Subscriber)
-         - ActiveMQ sender via stomp (QueueProcessor)
-    """
-    def __init__(self, settings, topics, parser_functions):
-        logger.debug("Initiating Manager")
-        self.settings = settings
-        self.topics = topics
-        self.parser_functions = parser_functions
-
-        #queue to send results to broker
-        self.queue = Queue.Queue(settings.MAX_QUEUE_SIZE)
         try:
-            self.mq = sysv_ipc.MessageQueue(settings.OS_MQ_KEY)
-        except sysv_ipc.ExistentialError:
-            logger.error("Message queue does not exist for key %i . \
-            Check if Nagios is using the same key and is running " % settings.OS_MQ_KEY)
-            exit(1)
+            self.stat_filename = os.stat(filename)
+        except OSError:
+            self.stat_filename = -1
 
-        #start execution
-        self.parser = neb_parser.Parser(self.topics, self.parser_functions)
-        self.subscriber = Subscriber("subscriber", self.mq, settings,
-                                     self.parser, self.queue)
-        self.subscriber.start()
-        self.processor = QueueProcessor(self.queue, self.settings)
 
-        #main thread will be processing
-        self.processor.process()
+    def run(self):
+        while self.should_run.is_set():
+            last_modified = FileMonitor.get_last_modified(self.wildcard)
+            if not last_modified:
+                time.sleep(self.stat_check_time)
+                continue
+            try:
+                stat_last_modified = os.stat(last_modified)
+            except OSError:
+                time.sleep(self.stat_check_time)
+                continue
+            if last_modified != self.filename and \
+               stat_last_modified[-2] >= self.stat_filename[-2] or \
+               last_modified == self.filename and \
+               stat_last_modified[-3] > self.stat_filename[-3]:
+                self.filename = last_modified
+                self.stat_filename = os.stat(last_modified)
+                self.new_file.set()
+
+            time.sleep(self.stat_check_time)
+
+
+    @staticmethod
+    def get_last_modified(wildcard):
+        filenames = {}
+        for filename in glob.glob(wildcard):
+            try:
+                stat = os.stat(filename)
+            except:
+                continue
+            filenames[stat[-2]] = filename
+        if len(filenames):
+            timestamps = filenames.keys()
+            timestamps.sort()
+            last_modified = filenames[timestamps[-1]]
+            return last_modified
+        return None
 
 
 class Subscriber(threading.Thread):
-    def __init__ (self, name, mq, settings, parser, queue):
+    def __init__(self, filename, go_to_the_end, settings, parser, queue,
+                 seek_time=0.1):
         threading.Thread.__init__(self)
-        self.name = name
-        self.mq = mq
         self.settings = settings
         self.parser = parser
         self.queue = queue
         self.header = settings.DESTINATION
 
-    def run (self):
-        while True:
-            try:
-                logger.debug("Waiting for a OS message:")
+        self.should_run = threading.Event()
+        self.should_run.set()
 
-                #This reception blocks until some new message appears. Other option is to use flag IPC_NOWAIT
-                message, message_type = self.mq.receive()
-                message = str(message)
-                if message.find('\0') < 0:
-                    logger.warn("Message should end with '\\0' character")
-                    pass
-                message, char, garbage = message.partition('\0')
-                logger.debug("Message received. Type: %i Message: %s" %(message_type, str(message)))
-                events = self.parser.parse(message_type, str(message))
+        self.seek_time = seek_time
+        self.filename = filename
+        self.fp = open(filename, 'r')
+        if go_to_the_end:
+            self.fp.seek(0, 2)
+
+
+    def run(self):
+        message_type = self.settings.LOG_MESSAGE_TYPE
+        while self.should_run.is_set():
+            new_line = self.fp.readline()
+            if new_line:
+                message = '%s^%s^%s^%s' % (hostname, 'check_log', '0', new_line)
+                events = self.parser.parse(message_type, message)
                 if events != neb_parser.NOT_IMPLEMENTED and events != neb_parser.BAD_FORMAT:
                     for event in events:
                         if event != neb_parser.NOT_IMPLEMENTED and event != neb_parser.BAD_FORMAT:
                             self.publish(event)
-
-            except sysv_ipc.PermissionsError, sysv_ipc.ExistentialError:
-                logger.error("Message could not be received. Check if os queue exist and its permission")
-                time.sleep(self.settings.OS_MQ_SLEEP)
-                pass
-            except sysv_ipc.InternalError:
-                logger.error("A severe error ocurred in os message queue. Aborting..")
-                exit(1)
-            except Exception, e:
-                logger.error('Unknown exception %s' % str(sys.exc_info()))
-                exit(1)
+            else:
+                time.sleep(self.seek_time)
 
 
     def publish(self, event):
-        """ Commmon logic for publish event into queue """
-        self.header.update({'timestamp': long(time.time())*1000})
-        self.header.update({'eventtype': event['eventtype'] })
+        self.header.update({'timestamp': long(time.time()) * 1000})
+        self.header.update({'eventtype': event['eventtype']})
         del event['eventtype']
 
         # Do not use references to avoid queue mismatches
@@ -121,16 +136,97 @@ class Subscriber(threading.Thread):
             logger.debug("Message on queue")
 
 
-class QueueProcessor(object):
+class Manager(object):
+    def __init__(self, settings, topics, parser_functions):
+        logger.debug("Initiating General Log Manager")
+        self.settings = settings
+        self.topics = topics
+        self.parser_functions = parser_functions
+
+        self.parser = neb_parser.Parser(self.topics, self.parser_functions)
+        log_managers = []
+        for logfile in self.settings.LOG_FILES:
+            print 'iniciando LogManager para %s' % logfile
+            log_manager = LogManager(settings, topics, parser_functions,
+                                     logfile)
+            log_managers.append(log_manager)
+            log_manager.start()
+
+        try:
+            time.sleep(1)
+        except KeyboardInterrupt:
+            for log_manager in log_managers:
+                log_manager.should_run.clear()
+            sys.exit()
+
+
+class LogManager(threading.Thread):
+
+
+    def __init__(self, settings, topics, parser_functions, wildcard,
+                 check_new_file_time=0.1):
+        threading.Thread.__init__(self)
+        logger.debug("Initiating LogManager for %s" % wildcard)
+        self.topics = topics
+        self.parser_functions = parser_functions
+        self.settings = settings
+        self.check_new_file_time = check_new_file_time
+
+        self.should_run = threading.Event()
+        self.should_run.set()
+        go_to_the_end = True
+        filename = FileMonitor.get_last_modified(wildcard)
+        if not filename:
+            go_to_the_end = False
+            while not filename:
+                try:
+                    filename = FileMonitor.get_last_modified(wildcard)
+                    time.sleep(check_new_file_time)
+                except KeyboardInterrupt:
+                    sys.exit(0)
+
+        self.parser = neb_parser.Parser(self.topics, self.parser_functions)
+        self.queue = Queue.Queue(settings.MAX_QUEUE_SIZE)
+        self.subscriber = Subscriber(filename, go_to_the_end, settings,
+                                     self.parser, self.queue)
+        self.file_monitor = FileMonitor(filename, wildcard)
+        self.processor = QueueProcessor(self.queue, settings)
+        self.subscriber.start()
+        self.file_monitor.start()
+        self.processor.start()
+       
+
+    def run(self):
+        while self.should_run.is_set():
+            if self.file_monitor.new_file.is_set():
+                self.subscriber.should_run.clear()
+                del self.subscriber
+                self.subscriber = Subscriber(self.file_monitor.filename,
+                                             False,
+                                             self.settings,
+                                             self.parser, self.queue)
+                self.subscriber.start()
+                self.file_monitor.new_file.clear()
+
+            time.sleep(self.check_new_file_time)
+
+        self.file_monitor.should_run.clear()
+        self.subscriber.should_run.clear()
+
+
+
+class QueueProcessor(threading.Thread):
     """ Responsible for processing objects in queue """
     def __init__(self, queue, settings):
+        threading.Thread.__init__(self)
         self.queue = queue
         self.connection = ConnectionAdapter(settings.BROKER,
                                             settings.CONN_SLEEP_DELAY)
         self.settings = settings
 
 
-    def process(self, max_messages=-1):
+    def run(self):
+        max_messages = -1
         sent = True
         processed_messages = 0
         while processed_messages != max_messages:

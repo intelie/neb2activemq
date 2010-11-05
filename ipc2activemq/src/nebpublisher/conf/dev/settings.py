@@ -20,3 +20,6 @@ DESTINATION = {'destination': '/queue/events'} # will be inherited for each conf
 
 FILTER_HOSTS = False
 ALLOWED_HOSTS = tuple()
+
+LOG_MESSAGE_TYPE = 13
+LOG_FILES = ('/home/alvaro/log1-*.log', '/home/alvaro/log2-*.log')
