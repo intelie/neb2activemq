@@ -1,5 +1,52 @@
 import fakenagios
 
+
+apache_bws_off = {
+    {'host': 'dvel-lav-01', 'eventtype': 'TCP', 'description': 'TCP OK - 0.01 second response time on port 80'},
+    {'host': 'dvel-lav-01', 'eventtype': 'TCP', 'description': 'TCP CRITICAL - 0.01 second response time on port 80'},
+    {'host': 'dvel-lav-01', 'eventtype': 'TCP', 'description': 'TCP CRITICAL - 0.01 second response time on port 80'},
+    {'host': 'dvel-lav-01', 'eventtype': 'TCP', 'description': 'TCP CRITICAL - 0.01 second response time on port 80'},
+}
+apache_bws_on = {
+    {'host': 'dvel-lav-01', 'eventtype': 'TCP', 'description': 'TCP CRITICAL - 0.01 second response time on port 80'},
+    {'host': 'dvel-lav-01', 'eventtype': 'TCP', 'description': 'TCP CRITICAL - 0.01 second response time on port 80'},
+    {'host': 'dvel-lav-01', 'eventtype': 'TCP', 'description': 'TCP CRITICAL - 0.01 second response time on port 80'},
+    {'host': 'dvel-lav-01', 'eventtype': 'TCP', 'description': 'TCP OK - 0.01 second response time on port 80'},
+}
+
+
+disk_bws_error = {
+    {'host': 'loma-ldr-01', 'eventtype': 'Disk', 'description': 'DISK CRITICAL - free space: /test 99 MB (6% inode=10%)'},
+    {'host': 'loma-ldr-01', 'eventtype': 'Disk', 'description': 'DISK CRITICAL - free space: /test 99 MB (5% inode=10%)'},
+    {'host': 'loma-ldr-01', 'eventtype': 'Disk', 'description': 'DISK CRITICAL - free space: /test 99 MB (4% inode=10%)'},
+    {'host': 'loma-ldr-01', 'eventtype': 'Disk', 'description': 'DISK CRITICAL - free space: /test 99 MB (3% inode=10%)'},
+}
+disk_bws_warning = {
+    {'host': 'loma-ldr-01', 'eventtype': 'Disk', 'description': 'DISK CRITICAL - free space: /test 99 MB (21% inode=10%)'},
+    {'host': 'loma-ldr-01', 'eventtype': 'Disk', 'description': 'DISK CRITICAL - free space: /test 99 MB (10% inode=10%)'},
+    {'host': 'loma-ldr-01', 'eventtype': 'Disk', 'description': 'DISK CRITICAL - free space: /test 99 MB (9% inode=10%)'},
+    {'host': 'loma-ldr-01', 'eventtype': 'Disk', 'description': 'DISK CRITICAL - free space: /test 99 MB (11% inode=10%)'},
+}
+disk_bws_ok = {
+    {'host': 'loma-ldr-01', 'eventtype': 'Disk', 'description': 'DISK CRITICAL - free space: /test 99 MB (3% inode=10%)'},
+    {'host': 'loma-ldr-01', 'eventtype': 'Disk', 'description': 'DISK CRITICAL - free space: /test 99 MB (4% inode=10%)'},
+    {'host': 'loma-ldr-01', 'eventtype': 'Disk', 'description': 'DISK CRITICAL - free space: /test 99 MB (5% inode=10%)'},
+    {'host': 'loma-ldr-01', 'eventtype': 'Disk', 'description': 'DISK CRITICAL - free space: /test 99 MB (6% inode=10%)'},
+}
+
+host_bws_off = {
+    {'host': 'dvel-lav-01', 'eventtype': 'Ping', 'description': 'PING OK - Packet loss = 0%, RTA = 25.0 ms'},
+    {'host': 'dvel-lav-01', 'eventtype': 'Ping', 'description': 'PING CRITICAL - Packet loss = 100%, RTA = 2500.0 ms'},
+    {'host': 'dvel-lav-01', 'eventtype': 'Ping', 'description': 'PING CRITICAL - Packet loss = 100%, RTA = 2500.0 ms'},
+    {'host': 'dvel-lav-01', 'eventtype': 'Ping', 'description': 'PING CRITICAL - Packet loss = 100%, RTA = 2500.0 ms'},
+}
+host_bws_on = {
+    {'host': 'dvel-lav-01', 'eventtype': 'Ping', 'description': 'PING CRITICAL - Packet loss = 100%, RTA = 2500.0 ms'},
+    {'host': 'dvel-lav-01', 'eventtype': 'Ping', 'description': 'PING CRITICAL - Packet loss = 100%, RTA = 2500.0 ms'},
+    {'host': 'dvel-lav-01', 'eventtype': 'Ping', 'description': 'PING CRITICAL - Packet loss = 100%, RTA = 2500.0 ms'},
+    {'host': 'dvel-lav-01', 'eventtype': 'Ping', 'description': 'PING OK - Packet loss = 0%, RTA = 25.0 ms'},
+}
+
 test_service = {'diskOk' : 'Disk space OK - 8899052 kB free ( 39 % used)',
         'diskWarning' : 'Disk space WARNING - 6647236 kB free ( *61* % used)',
         'diskCritical' : 'Disk space CRITICAL - 6647224 kB free ( *61* % used)',

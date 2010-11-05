@@ -28,7 +28,7 @@ def send_messages(mq, service_counter, status_counter, test_service,
         pass
 
 
-def main(test_service):
+def main(test_service, host='some_host'):
     DAT = open("fakenagios.dat", "w")
     scale_list = [1.0] #, 1100.0, 1200.0, 1300.0, 1400.0, 1500.0]
     period = 600
@@ -51,7 +51,8 @@ def main(test_service):
                                           messages_on_queue))
                 DAT.flush()
                 # Send message
-                send_messages(mq, service_counter, status_counter, test_service)
+                send_messages(mq, service_counter, status_counter, test_service,
+                              host=host)
                 status_counter = (status_counter + 1) % 4
                 if status_counter == 0:
                     service_counter = (service_counter + 1) % 8
