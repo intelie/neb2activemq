@@ -333,76 +333,17 @@ class TestServiceParser(unittest.TestCase):
         self.assertEqual('/dev/mapper/Vol_IG-ig_lv', event['partition'])
         self.assertEqual(10.0, event['free_percent'])
 
-
-    def test_check_disk_NT(self):
-        message = 'some_host^check_disk_NT^0^DISK OK - Drive C: Local Disk - Total: 30.01 GB - Free: 23.05 GB (77%) - Used: 6.95 GB (23%)'
+    def test_check_event_log(self):
+        message = 'some_host^check_log^4^2010-11-12 09:53:57.614 ERROR [2480] - Error on line 14 of monitor MyMonitor (monitors\MyMonitor.mon): Invalid key "a" passed to dictionary [] operator'
         events = self.parser.parse_service_check(message)
         self.assertEqual(1, len(events))
         event = events[0]
         self.assertEqual('some_host', event['host'])
-        self.assertEqual('OK', event['state'])
-        self.assertEqual('Disk', event['eventtype'])
-        self.assertEqual('Drive C: Local Disk', event['partition'])
-        self.assertEqual('77', event['free_percent'])
-        #TODO: return free_percent as string in tests above?
-
-
-    def test_check_varnish_client(self):
-        message = 'some_host^check_varnish_client^0^Client - Connections: 177916451 (43.74), Drop: 123 (1.34), Requests: 582989047 (143.34)'
-        events = self.parser.parse_service_check(message)
-        self.assertEqual(1, len(events))
-        event = events[0]
-        self.assertEqual('some_host', event['host'])
-        self.assertEqual('OK', event['state'])
-        self.assertEqual('VarnishClient', event['eventtype'])
-        self.assertEqual('177916451', event['connections'])
-        self.assertEqual('43.74', event['connections_per_second'])
-        self.assertEqual('123', event['dropped'])
-        self.assertEqual('1.34', event['dropped_per_second'])
-        self.assertEqual('582989047', event['requests'])
-        self.assertEqual('143.34', event['requests_per_second'])
-
-
-    def test_check_varnish_cache(self):
-        message = 'some_host^check_varnish_cache^0^Cache Utilization - hit: 812242730 (123.40), hitpass: 11 (2.22), miss: 87595932 (13.31)'
-        events = self.parser.parse_service_check(message)
-        self.assertEqual(1, len(events))
-        event = events[0]
-        self.assertEqual('some_host', event['host'])
-        self.assertEqual('OK', event['state'])
-        self.assertEqual('VarnishCache', event['eventtype'])
-        self.assertEqual('812242730', event['hits'])
-        self.assertEqual('123.40', event['hits_per_second'])
-        self.assertEqual('11', event['hitpasses'])
-        self.assertEqual('2.22', event['hitpasses_per_second'])
-        self.assertEqual('87595932', event['misses'])
-        self.assertEqual('13.31', event['misses_per_second'])
-
-
-    def test_check_varnish_backend(self):
-        message = 'some_host^check_varnish_backend^0^Backend Usage - Conn: 9431982 (6.17), Unhealthy: 3 (4.44), Busy: 5 (6.66), Fail: 1 (0.01), Reuse: 12562924 (8.22), TooLate: 298164 (0.20), Recycle: 12861091 (8.42), UnUsed: 6 (7.77)'
-        events = self.parser.parse_service_check(message)
-        self.assertEqual(1, len(events))
-        event = events[0]
-        self.assertEqual('some_host', event['host'])
-        self.assertEqual('OK', event['state'])
-        self.assertEqual('VarnishBackend', event['eventtype'])
-        self.assertEqual('9431982', event['conn'])
-        self.assertEqual('6.17', event['conn_per_second'])
-        self.assertEqual('3', event['unhealthy'])
-        self.assertEqual('4.44', event['unhealthy_per_second'])
-        self.assertEqual('5', event['busy'])
-        self.assertEqual('6.66', event['busy_per_second'])
-        self.assertEqual('1', event['fail'])
-        self.assertEqual('0.01', event['fail_per_second'])
-        self.assertEqual('12562924', event['reuse'])
-        self.assertEqual('8.22', event['reuse_per_second'])
-        self.assertEqual('298164', event['toolate'])
-        self.assertEqual('0.20', event['toolate_per_second'])
-        self.assertEqual('12861091', event['recycle'])
-        self.assertEqual('8.42', event['recycle_per_second'])
-        self.assertEqual('6', event['unused'])
-        self.assertEqual('7.77', event['unused_per_second'])
+        self.assertEqual('ERROR', event['state'])
+        self.assertEqual('check_log', event['eventtype'])
+        self.assertEqual('2010-11-12 09:53:57.614', event['log_time'])
+        self.assertEqual('2480', event['error_code'])
+        self.assertEqual('Error on line 14 of monitor MyMonitor (monitors\MyMonitor.mon): Invalid key "a" passed to dictionary [] operator', event['log_line'])
 
 
 if __name__ == '__main__':

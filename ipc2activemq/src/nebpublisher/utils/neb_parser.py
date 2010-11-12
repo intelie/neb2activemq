@@ -75,7 +75,7 @@ class Parser():
         logger.debug("Message %s - service check" % message)
         data = []
         data = message.split('^')
-
+        
         if len(data) < 4:
             return BAD_FORMAT
 
@@ -93,7 +93,7 @@ class Parser():
         if command_name in self.topics.expressions:
             topic = self.topics.expressions[command_name]
             result = self.create_event_from_regexp(host, message, topic)
-            if result != BAD_FORMAT and result != NOT_IMPLEMENTED:
+            if result != BAD_FORMAT and result != NOT_IMPLEMENTED or result == None:
                 result['state'] = SERVICE_CHECK_MAP[int(state)]
                 return [result]
             return result
@@ -101,7 +101,7 @@ class Parser():
             command_parser_functions = self.parser_functions.commands[command_name]
             events = self.create_events_from_parser_functions(host, message, command_parser_functions)
             for event in events:
-                event['state'] = SERVICE_CHECK_MAP[int(state)]
+               event['state'] = SERVICE_CHECK_MAP[int(state)]
             return events
 
         logger.warn("Event type %s not registered as a topic" % command_name)

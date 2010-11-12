@@ -16,16 +16,17 @@ errorRegexps = [
 ]
 
 expressions = {
-    'check_log': [
-        {'labelFilter': None,
-         'eventtype': 'Log',
-         'regexps': [
-            {'properties': ['entire_log_line'],
-             'regexp': r"(.*)"
-            }
-         ]
-        }
-    ],
+  'check_log': [
+       {'labelFilter': None,
+        'eventtype': 'check_log',
+        'regexps': [
+           {'properties': ['log_time', 'state', 'error_code', 'log_line'],
+            'regexp': r"(.*) (ERROR|CRITICAL) \[(\d+)\] - (.*)"
+           }
+        ]
+       }
+   ],
+    
     'check_cpu': [
         {'labelFilter': 'CPU',
          'eventtype': 'CPU',
