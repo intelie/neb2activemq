@@ -2,7 +2,7 @@
 
 ENV=dev
 
-DAEMON=nebpublisher.py
+DAEMON=/opt/intelie/neb2activemq-1.1.2/ipc2activemq/src/nebpublisher.py
 NAME=nebpublisher
 DESC="nebpublisher daemon"
 
@@ -10,7 +10,7 @@ if [ -z "$PIDFILE" ] ; then
 	if(test -f "$NAME.pid") then
 		PIDFILE=$NAME.pid
 	else
-		PIDFILE=/var/run/nagios/$NAME.pid	
+		PIDFILE=/usr/local/nagios/var/$NAME.pid	
 	fi
 fi
 
@@ -28,7 +28,7 @@ startdaemon(){
         echo "Daemon is running: $PIDFILE \n" 
     else
         echo "Starting $DESC: $DAEMON \n"
-        sudo -u nagios python2.6 $DAEMON --pidfile=$PIDFILE --env=$ENV
+        sudo -u nagios /opt/intelie/python2.6.5/bin/python $DAEMON --pidfile=$PIDFILE --env=$ENV
     fi
 }
 
@@ -46,7 +46,7 @@ stopdaemon(){
 }
 
 forcestop(){
-  sudo -u nagios ps -ef | grep  nebpublisher.py | grep -v grep | awk '{ print $2 }'| xargs kill -9
+  sudo -u nagios ps -ef | grep nebpublisher.py | grep -v grep | awk '{ print $2 }'| xargs kill -9
 }
 
 test -f $DAEMON || exit 0
