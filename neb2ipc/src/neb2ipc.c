@@ -213,16 +213,16 @@ int neb2ipc_handle_data(int event_type, void *data) {
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
 				#endif
-
 				return 0;
 			}
 			
+			service *svc;
 			// If command_name comes null, search on service struct
-			if (scdata->command_name != NULL && strlen(scdata->command_name)
-					> 0) {
+			if (scdata->command_name != NULL && strlen(scdata->command_name) > 0) {
 				strcpy(command_name,scdata->command_name);
-			} else {
-				service *svc;
+				svc = find_service(scdata->host_name, scdata->service_description);
+			}
+			else {
 				if ((svc = find_service(scdata->host_name,
 						scdata->service_description)) == NULL) {
 					snprintf(temp_buffer, sizeof(temp_buffer) - 1,
@@ -253,7 +253,7 @@ int neb2ipc_handle_data(int event_type, void *data) {
 
 					/* log debug */
 					#ifdef DEBUG
-					snprintf(temp_buffer,sizeof(temp_buffer) - 1," Command name is %s", command_name );
+					snprintf(temp_buffer,sizeof(temp_buffer) - 1,"cmd_name =  %s", command_name);
 					temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 					write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
 					#endif
@@ -281,9 +281,10 @@ int neb2ipc_handle_data(int event_type, void *data) {
 				return 0;
 			}
 
-			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%s^%i^%s\0",
-					scdata->host_name, command_name, scdata->state,
-					scdata->output);
+			snprintf(buf.mtext, sizeof(buf.mtext) - 1,
+                                 "%d^%s^%s^%i^%s\0", svc->notifications_enabled,
+                                 scdata->host_name, command_name, scdata->state,
+                                 scdata->output);
 
 			/* debug log*/
 			#ifdef DEBUG
