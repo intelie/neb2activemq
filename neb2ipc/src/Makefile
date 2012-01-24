@@ -22,10 +22,10 @@ all: neb2ipc
 debug: neb2ipc_debug
 
 neb2ipc: neb2ipc.c
-	$(CC) $(MOD_CFLAGS) $(CFLAGS) -combine -o neb2ipc.o neb2ipc.c $(MOD_LDFLAGS) $(LDFLAGS) $(LIBS)
+	$(CC) $(MOD_CFLAGS) $(CFLAGS) -o neb2ipc.o neb2ipc.c $(MOD_LDFLAGS) $(LDFLAGS) $(LIBS)
 
 neb2ipc_debug: neb2ipc.c
-	$(CC) $(MOD_CFLAGS) $(CFLAGS) $(DBG_FLAGS) -combine -o neb2ipc.o neb2ipc.c $(MOD_LDFLAGS) $(LDFLAGS) $(LIBS)
+	$(CC) $(MOD_CFLAGS) $(CFLAGS) $(DBG_FLAGS) -o neb2ipc.o neb2ipc.c $(MOD_LDFLAGS) $(LDFLAGS) $(LIBS)
 
 clean:
 	rm -f neb2ipc.o

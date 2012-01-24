@@ -92,6 +92,7 @@ int nebmodule_init(int flags, char *args, nebmodule *handle) {
 			0, neb2ipc_handle_data);
 	neb_register_callback(NEBCALLBACK_SERVICE_CHECK_DATA,
 			neb2ipc_module_handle, 0, neb2ipc_handle_data);
+  neb_register_callback(NEBCALLBACK_DOWNTIME_DATA, neb2ipc_module_handle, 0, neb2ipc_handle_data);
 
 	/* create a message queue */
 	/* the path and id are used just to create a unique key */
@@ -124,6 +125,7 @@ int nebmodule_deinit(int flags, int reason) {
 	/* deregister for all events we previously registered for... */
 	neb_deregister_callback(NEBCALLBACK_HOST_CHECK_DATA, neb2ipc_handle_data);
 	neb_deregister_callback(NEBCALLBACK_SERVICE_CHECK_DATA, neb2ipc_handle_data);
+  neb_deregister_callback(NEBCALLBACK_DOWNTIME_DATA, neb2ipc_handle_data);
 
 	/* log a message to the Nagios log file */
 	snprintf(temp_buffer, sizeof(temp_buffer) - 1, "neb2ipc: Goodbye!\n");
@@ -159,14 +161,13 @@ int neb2ipc_handle_data(int event_type, void *data) {
 
 	nebstruct_host_check_data *hcdata = NULL;
 	nebstruct_service_check_data *scdata = NULL;
+  nebstruct_downtime_data *dtdata = NULL;
 
 	buf.mtype = event_type;
-
 	/* what type of event/data do we have? */
 	switch (event_type) {
 
 	case NEBCALLBACK_HOST_CHECK_DATA:
-
 		if ((hcdata = (nebstruct_host_check_data *) data)) {
 
 			if (hcdata->type != NEBTYPE_HOSTCHECK_PROCESSED) {
@@ -199,11 +200,29 @@ int neb2ipc_handle_data(int event_type, void *data) {
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
 			}
-		}
+		
 		break;
+    }
+
+  case NEBCALLBACK_DOWNTIME_DATA:
+    //if ((dtdata = (nebstruct_downtime_data *) data)) {
+    
+    snprintf(buf.mtext, sizeof(buf.mtext) - 1, "Type - %i, downtime_type - %i", dtdata->type, dtdata->downtime_type);
+    #ifdef DEBUG
+      snprintf(temp_buffer,sizeof(temp_buffer) - 1," Check not processed yet");
+      temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+      write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+    #endif
+//    if (msgsnd(msqid, (struct buf *) &buf, sizeof(buf), IPC_NOWAIT) == -1) {
+      snprintf(temp_buffer, sizeof(temp_buffer) - 1, "Error to send message to the queue id %i: %s", msqid, strerror(errno));
+      temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+      write_to_all_logs("teste", NSLOG_RUNTIME_WARNING);
+//    } 
+    
+  break;
+  
 
 	case NEBCALLBACK_SERVICE_CHECK_DATA:
-
 		if ((scdata = (nebstruct_service_check_data *) data)) {
 			if (scdata->type != NEBTYPE_SERVICECHECK_PROCESSED) {
 				// Check not processed yet
@@ -302,16 +321,14 @@ int neb2ipc_handle_data(int event_type, void *data) {
 						strerror(errno));
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
-			}
-
-		}
+			
 
 		break;
+    }
 
 	default:
 		break;
-	}
-
+    }
+  }
 	return 0;
 }
-
