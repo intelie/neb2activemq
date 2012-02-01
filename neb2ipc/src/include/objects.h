@@ -325,11 +325,13 @@ struct host_struct{
 	double  z_3d;
 	int     should_be_drawn;
 	customvariablesmember *custom_variables;
+  int     current_state;
+  int     scheduled_downtime_depth;
 #ifdef NSCORE
 	int     problem_has_been_acknowledged;
 	int     acknowledgement_type;
 	int     check_type;
-	int     current_state;
+//	int     current_state;
 	int     last_state;
 	int     last_hard_state;
 	char	*plugin_output;
@@ -364,7 +366,7 @@ struct host_struct{
 	int     no_more_notifications;
 	unsigned long current_notification_id;
 	int     check_flapping_recovery_notification;
-	int     scheduled_downtime_depth;
+//	int     scheduled_downtime_depth;
 	int     pending_flex_downtime;
 	int     state_history[MAX_STATE_HISTORY_ENTRIES];    /* flap detection */
 	int     state_history_index;
