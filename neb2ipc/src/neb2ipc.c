@@ -189,14 +189,17 @@ int neb2ipc_handle_data(int event_type, void *data) {
 			}
 
       host *hst;
-      char *msg;
       hst = find_host(hcdata->host_name);
-   /*   if (hst->current_state == HOST_DOWN)
-        msg = "host is currently in scheduled downtime"; */
+      if (hst->scheduled_downtime_depth == HOST_DOWN) {
+       snprintf(temp_buffer, sizeof(temp_buffer) - 1, "Host '%s' is currently in scheduled downtime\0" ,hst->name);
+       temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+       write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+      }
+ 
 
-			/* send message to message queue */
-			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%i^%s - %s\0",
-					hcdata->host_name, hcdata->state, hcdata->output, msg);
+			/*send message to message queue */
+			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%i^%s^%i\0",
+					hcdata->host_name, hcdata->state, hcdata->output, hst->scheduled_downtime_depth);
 			if (msgsnd(msqid, (struct buf *) &buf, sizeof(buf), IPC_NOWAIT)
 					== -1) {
 				snprintf(temp_buffer, sizeof(temp_buffer) - 1,
@@ -287,19 +290,20 @@ int neb2ipc_handle_data(int event_type, void *data) {
 				return 0;
 			}
       
-      char msg[256];
       host *hst;
       hst = find_host(scdata->host_name);
-      snprintf(temp_buffer, sizeof(temp_buffer) - 1, "xxx = %s %s %i\0" ,scdata->host_name, hst->name, hst->scheduled_downtime_depth);
-    //  if (hst->current_state == HOST_DOWN)
- //       msg = "host is currently in scheduled downtime";
+      if (hst->scheduled_downtime_depth == HOST_DOWN) {
+        snprintf(temp_buffer, sizeof(temp_buffer) - 1, "Host '%s' is currently in scheduled downtime\0" ,scdata->host_name);
+        temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+        write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+      }
 
-/*			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%s^%i^%s - %s\0",
+			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%s^%i^%s^%i\0",
 					scdata->host_name, command_name, scdata->state,
-					scdata->output, msg);
-*/
+					scdata->output, hst->scheduled_downtime_depth);
+
 			/* debug log*/
-/*
+
 			#ifdef DEBUG
 			snprintf(temp_buffer, sizeof(temp_buffer) - 1,
 					"service name> %s description> %s for> host %s",
@@ -308,20 +312,20 @@ int neb2ipc_handle_data(int event_type, void *data) {
 			temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 			write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
 			#endif
-*/
-/*
+
+
 			if (msgsnd(msqid, (struct buf *) &buf, sizeof(buf), IPC_NOWAIT)
 					== -1) {
 				snprintf(temp_buffer, sizeof(temp_buffer) - 1,
 						" Error to send message to queue id %i: %s", msqid,
 						strerror(errno));
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
-*/
+
 				write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
 			
 
 		break;
-//    }
+    }
 
 	default:
 		break;

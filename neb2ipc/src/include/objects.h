@@ -456,6 +456,7 @@ struct service_struct{
 	char    *icon_image;
 	char    *icon_image_alt;
 	customvariablesmember *custom_variables;
+   int     scheduled_downtime_depth;
 #ifdef NSCORE
 	int     problem_has_been_acknowledged;
 	int     acknowledgement_type;
@@ -497,7 +498,7 @@ struct service_struct{
 	double  execution_time;
 	int     is_executing;
 	int     check_options;
-	int     scheduled_downtime_depth;
+//	int     scheduled_downtime_depth;
 	int     pending_flex_downtime;
 	int     state_history[MAX_STATE_HISTORY_ENTRIES];    /* flap detection */
 	int     state_history_index;
