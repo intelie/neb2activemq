@@ -16,6 +16,16 @@ errorRegexps = [
 ]
 
 expressions = {
+    'check_downtime' : [
+        {'labelFilter': '',
+         'eventtype': 'downtime',
+	     'regexps': [
+            {'properties': ['nomeqq'], 
+             'regexp': r"(Localhost is currently in scheduled downtime)"
+            }
+         ]
+        }
+     ],
     'check_cpu': [
         {'labelFilter': 'CPU',
          'eventtype': 'CPU',

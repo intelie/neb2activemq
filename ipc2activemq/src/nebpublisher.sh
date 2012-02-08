@@ -28,7 +28,7 @@ startdaemon(){
         echo "Daemon is running: $PIDFILE \n" 
     else
         echo "Starting $DESC: $DAEMON \n"
-        sudo -u nagios python2.6 $DAEMON --pidfile=$PIDFILE --env=$ENV
+        sudo -u nagios python $DAEMON --pidfile=$PIDFILE --env=$ENV
     fi
 }
 

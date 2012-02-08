@@ -84,8 +84,9 @@ class Subscriber(threading.Thread):
                     logger.warn("Message should end with '\\0' character")
                     pass
                 message, char, garbage = message.partition('\0')
-                logger.debug("Message received. Type: %i Message: %s" %(message_type, str(message)))
-                events = self.parser.parse(message_type, str(message))
+                logger.debug("Message received. Type: %i Message: %s" %(message_type, message))
+                events = self.parser.parse(message_type, message)
+                logger.debug('Returned events: %s' % str(events))
                 if events != neb_parser.NOT_IMPLEMENTED and events != neb_parser.BAD_FORMAT:
                     for event in events:
                         if event != neb_parser.NOT_IMPLEMENTED and event != neb_parser.BAD_FORMAT:

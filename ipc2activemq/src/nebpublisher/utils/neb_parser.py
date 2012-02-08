@@ -48,16 +48,17 @@ class Parser():
         self.switch = {13: self.parse_service_check,
                        14: self.parse_host_check}
 
-    def parse(self, type, message):
+    def parse(self, message_type, message):
         try:
-            return self.switch[type](message)
+            return self.switch[message_type](message)
         except KeyError, e:
-            self.not_implemented_type(type)
+            self.not_implemented_type(message_type)
             return NOT_IMPLEMENTED
         except Exception, e:
             info = sys.exc_info()
             import traceback
             traceback.print_tb(info[2])
+            print str(info)
             logger.warn('Unknown exception %s' % str(info))
             exit(1) #Houston!
 
@@ -70,29 +71,31 @@ class Parser():
         return
 
     def parse_service_check(self, message):
+        logger.debug("message: %s" % message)
         if message is None:
             return BAD_FORMAT
         logger.debug("Message %s - service check" % message)
         data = []
         data = message.split('^')
 
-        if len(data) < 4:
+        if len(data) < 5:
             return BAD_FORMAT
 
         host = data[0]
         command_name = data[1]
         state = data[2]
-        message = data[3]
+        downtime = data[3]
+        message = data[4]
 
         if not host or not command_name or not state or not message:
             return BAD_FORMAT
 
-        logger.debug("Host %s - command_name %s - state %s - output %s" % \
-                     (host, command_name, state, message))
+        logger.debug("Host %s - command_name %s - state %s - downtime %s - output %s" % \
+                     (host, command_name, state, downtime, message))
 
         if command_name in self.topics.expressions:
             topic = self.topics.expressions[command_name]
-            result = self.create_event_from_regexp(host, message, topic)
+            result = self.create_event_from_regexp(host, downtime,  message, topic)
             if result != BAD_FORMAT and result != NOT_IMPLEMENTED:
                 result['state'] = SERVICE_CHECK_MAP[int(state)]
                 return [result]
@@ -109,22 +112,24 @@ class Parser():
 
 
     def parse_host_check(self, message):
+        downtime = 1
         if not message:
             return BAD_FORMAT
 
         logger.debug("Message %s - host check" % message)
         data = []
         data = message.split('^')
-        if len(data) < 3:
+        if len(data) < 4:
             return BAD_FORMAT
         if not data[0] or not data[1] or not data[2]:
             return BAD_FORMAT
         host = data[0]
         state = data[1]
-        output = data[2]
+        downtime = data[2]
+        output = data[3]
         logger.debug("Host %s - output %s" % (host,output) ) 
         topic = self.topics.expressions['host']
-        event = self.create_event_from_regexp(host, output, topic)
+        event = self.create_event_from_regexp(host, downtime, output, topic)
 
         if event != BAD_FORMAT and event != NOT_IMPLEMENTED:
             event['state'] = HOST_CHECK_MAP[int(state)]
@@ -132,7 +137,7 @@ class Parser():
         return event
 
 
-    def create_event_from_regexp(self, host, message, topic):
+    def create_event_from_regexp(self, host, downtime, message, topic):
         event = {'host' : host}
         logger.debug('Message to be matched: %s \n Topic: %s' % (message, str(topic)))
         match = False
@@ -154,6 +159,7 @@ class Parser():
                         else:
                             # if groups in regexp and the number of properties match consider it a match
                             match = True
+                            logger.debug("Deu true no match")
                             event['eventtype'] = item['eventtype']
                             event['description'] = message
 
@@ -166,6 +172,7 @@ class Parser():
                                 if m.group(i) != None:
                                     event[property] = m.group(i)
                                     i = i + 1
+                            event['downtime'] = downtime
                             # stop iterating over subitem
                             break
 
