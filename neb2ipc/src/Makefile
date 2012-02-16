@@ -9,7 +9,7 @@ SRC_INCLUDE=./include
 
 CC=gcc
 MOD_CFLAGS=-fPIC
-CFLAGS=-g -O2 -DHAVE_CONFIG_H -DNSCORE
+CFLAGS=-g -O2 -DHAVE_CONFIG_H -DNSCORE 
 MOD_LDFLAGS=-shared
 LDFLAGS=
 LIBS=
@@ -27,9 +27,16 @@ neb2ipc: neb2ipc.c
 neb2ipc_debug: neb2ipc.c
 	$(CC) $(MOD_CFLAGS) $(CFLAGS) $(DBG_FLAGS) -o neb2ipc.o neb2ipc.c $(MOD_LDFLAGS) $(LDFLAGS) $(LIBS)
 
+final: tests.c
+	$(CC) $(CFLAGS) -o teste neb2ipc_teste.c tests.c -lcmockery
+
+teste: tests.c
+	$(CC) -o teste tests.c -lcmockery
+
 clean:
 	rm -f neb2ipc.o
 	rm -f *~ *.*~
+	rm -f teste
 
 distclean: clean
 	rm -f Makefile

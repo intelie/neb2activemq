@@ -31,7 +31,7 @@ expressions = {
          'eventtype': 'CPU',
          'regexps': [
             {'properties': ['state', 'user' , 'system', 'idle'], # ordenated!
-             'regexp': r"CPU usage \(%user %system %idle\) (OK|WARNING|CRITICAL) - (\d+) (\d+) \*?(\d+)\*?"
+             'regexp': r"CPU usage \(%user %system %idle\) (OK|WARNING|CRITICAL) - (\d+) (\d+) (\d+)"
             }
          ]
         }

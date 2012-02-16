@@ -27,6 +27,14 @@
 
 #include <string.h>
 
+
+int write_to_all_logs(char *, unsigned long);
+
+int write_to_all_logs(char *buffer, unsigned long data_type) {
+  printf("%s\n", buffer);
+return 0;
+}
+
 /* specify event broker API version (required) */
 NEB_API_VERSION( CURRENT_NEB_API_VERSION);
 
@@ -47,115 +55,21 @@ char command_name[1024];
 void *neb2ipc_module_handle = NULL;
 
 void neb2ipc_reminder_message(char *);
-int neb2ipc_handle_data(int, void *);
-
-/* this function gets called when the module is loaded by the event broker */
-int nebmodule_init(int flags, char *args, nebmodule *handle) {
-	char temp_buffer[1024];
-	time_t current_time;
-	unsigned long interval;
-
-	/* save our handle */
-	neb2ipc_module_handle = handle;
-
-	/* set some info - this is completely optional, as Nagios doesn't do anything with this data */
-	neb_set_module_info(neb2ipc_module_handle, NEBMODULE_MODINFO_TITLE,
-			"neb2ipc");
-	neb_set_module_info(neb2ipc_module_handle, NEBMODULE_MODINFO_AUTHOR,
-			"Intelie");
-	neb_set_module_info(neb2ipc_module_handle, NEBMODULE_MODINFO_TITLE,
-			"neb2ipc");
-	neb_set_module_info(neb2ipc_module_handle, NEBMODULE_MODINFO_VERSION,
-			"noversion");
-	neb_set_module_info(neb2ipc_module_handle, NEBMODULE_MODINFO_LICENSE,
-			"GPL v3");
-	neb_set_module_info(neb2ipc_module_handle, NEBMODULE_MODINFO_DESC,
-			"A Nagios Event Broker (NEB) module to integrate with activemq.");
-
-	/* log module info to the Nagios log file */
-	write_to_all_logs("neb2ipc: Copyright (c) 2009 Intelie", NSLOG_INFO_MESSAGE);
-
-	/* Example: log a message to the Nagios log file
-	temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
-	write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
-	*/
-
-	/* log a reminder message every 1 hour */
-	time(&current_time);
-	interval = 3600;
-	schedule_new_event(EVENT_USER_FUNCTION, TRUE, current_time + interval,
-			TRUE, interval, NULL, TRUE, (void *) neb2ipc_reminder_message,
-			"Processing events to activemq", 0);
-
-	/* register to be notified of check events */
-	neb_register_callback(NEBCALLBACK_HOST_CHECK_DATA, neb2ipc_module_handle,
-			0, neb2ipc_handle_data);
-	neb_register_callback(NEBCALLBACK_SERVICE_CHECK_DATA,
-			neb2ipc_module_handle, 0, neb2ipc_handle_data);
-  neb_register_callback(NEBCALLBACK_DOWNTIME_DATA, neb2ipc_module_handle, 0, neb2ipc_handle_data);
-
-	/* create a message queue */
-	/* the path and id are used just to create a unique key */
-	/*    if ((key = ftok("/usr/local/nagios/var", 1)) == -1){
-	 snprintf(temp_buffer,sizeof(temp_buffer)-1,"neb2ipc: System was unable to generate key for message queue.");
-	 temp_buffer[sizeof(temp_buffer)-1]='\x0';
-	 write_to_all_logs(temp_buffer, NSLOG_RUNTIME_ERROR);
-	 return 1;
-	 }*/
-
-	if ((msqid = msgget(KEY, IPC_CREAT | 0600)) == -1) {
-		snprintf(temp_buffer, sizeof(temp_buffer) - 1,
-				"neb2ipc: System was unable to create message queue.");
-		temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
-		write_to_all_logs(temp_buffer, NSLOG_RUNTIME_ERROR);
-		return 1;
-	}
-
-	snprintf(temp_buffer, sizeof(temp_buffer) - 1,
-			"neb2ipc: Created message queue %i.", msqid);
-	temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
-	write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
-
-	return 0;
-}
-
-/* this function gets called when the module is unloaded by the event broker */
-int nebmodule_deinit(int flags, int reason) {
-
-	/* deregister for all events we previously registered for... */
-	neb_deregister_callback(NEBCALLBACK_HOST_CHECK_DATA, neb2ipc_handle_data);
-	neb_deregister_callback(NEBCALLBACK_SERVICE_CHECK_DATA, neb2ipc_handle_data);
-  neb_deregister_callback(NEBCALLBACK_DOWNTIME_DATA, neb2ipc_handle_data);
-
-	/* log a message to the Nagios log file */
-	snprintf(temp_buffer, sizeof(temp_buffer) - 1, "neb2ipc: Goodbye!\n");
-	temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
-	write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
-
-	//	if (msgctl(msqid, IPC_RMID, NULL) == -1) {
-	//		/* log a message to the Nagios log file */
-	//			snprintf(temp_buffer,sizeof(temp_buffer)-1,"Could remove message queue id %i: %s",msqid, strerror(errno));
-	//			temp_buffer[sizeof(temp_buffer)-1]='\x0';
-	//			write_to_all_logs(temp_buffer,NSLOG_RUNTIME_ERROR);
-	//	}
-
-	return 0;
-}
-
-/* gets called every X minutes by an event in the scheduling queue */
-void neb2ipc_reminder_message(char *message) {
-
-	/* log a message to the Nagios log file */
-	snprintf(temp_buffer, sizeof(temp_buffer) - 1,
-			"neb2ipc: I'm still here! %s", message);
-	temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
-	write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
-
-	return;
-}
+int neb2ipc_handle_data(int, void *, int);
 
 /* handle data from Nagios daemon */
-int neb2ipc_handle_data(int event_type, void *data) {
+int neb2ipc_handle_data(int event_type, void *data, int msqid) {
+
+  
+/*  if ((msqid = msgget(KEY, IPC_CREAT | 0600)) == -1) {
+    snprintf(temp_buffer, sizeof(temp_buffer) - 1,
+        "neb2ipc: System was unable to create message queue.");
+    temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+    write_to_all_logs(temp_buffer, NSLOG_RUNTIME_ERROR);
+    return 1;
+  }
+*/
+
 	char CHECK_NRPE[] = "check_nrpe!";
 	int INDEX_AFTER_CHECK_NRPE = strlen(CHECK_NRPE);
 
@@ -185,10 +99,25 @@ int neb2ipc_handle_data(int event_type, void *data) {
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
 
+
 				return 0;
 			}
+      
       host *hst;
       hst = find_host(hcdata->host_name);
+      if (hst->name == NULL) {
+        snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%i^%i^%s\0",
+        hcdata->host_name, hcdata->state, ERROR_FIND_HOST, hcdata->output);
+        if (msgsnd(msqid, (struct buf *) &buf, sizeof(buf), IPC_NOWAIT) == -1) {
+          snprintf(temp_buffer, sizeof(temp_buffer) - 1,
+                  "Error to send message to queue id %i: %s", msqid,
+                   strerror(errno));
+                   temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+                   write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
+        }
+      return 0;
+      }
+
       if (hst->scheduled_downtime_depth == HOST_DOWN) {
        snprintf(temp_buffer, sizeof(temp_buffer) - 1, "Host '%s' is currently in scheduled downtime\0" ,hst->name);
        temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
@@ -291,6 +220,20 @@ int neb2ipc_handle_data(int event_type, void *data) {
       
       host *hst;
       hst = find_host(scdata->host_name);
+
+      if (hst->name == NULL) {
+       snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%i^%i^%s\0",
+                hcdata->host_name, hcdata->state, ERROR_FIND_HOST, hcdata->output);
+                if (msgsnd(msqid, (struct buf *) &buf, sizeof(buf), IPC_NOWAIT) == -1) {
+                           snprintf(temp_buffer, sizeof(temp_buffer) - 1,
+                           "Error to send message to queue id %i: %s", msqid,
+                           strerror(errno));
+                  temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+                  write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
+                }
+      return 0;
+      }
+
       if (hst->scheduled_downtime_depth == HOST_DOWN) {
         snprintf(temp_buffer, sizeof(temp_buffer) - 1, "Host '%s' is currently in scheduled downtime\0" ,scdata->host_name);
         temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
