@@ -11,7 +11,7 @@ import cProfile
 PIDFILE = os.path.join(os.path.abspath(os.path.dirname(__file__)), '/usr/local/nagios/var/nebpublisher.pid')
 DAEMON = False
 PROFILE = False
-ENV = "dev"
+ENV = "prod"
 
 def main():
     #read settings module

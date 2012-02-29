@@ -92,7 +92,6 @@ int nebmodule_init(int flags, char *args, nebmodule *handle) {
 			0, neb2ipc_handle_data);
 	neb_register_callback(NEBCALLBACK_SERVICE_CHECK_DATA,
 			neb2ipc_module_handle, 0, neb2ipc_handle_data);
-  neb_register_callback(NEBCALLBACK_DOWNTIME_DATA, neb2ipc_module_handle, 0, neb2ipc_handle_data);
 
 	/* create a message queue */
 	/* the path and id are used just to create a unique key */
@@ -125,7 +124,6 @@ int nebmodule_deinit(int flags, int reason) {
 	/* deregister for all events we previously registered for... */
 	neb_deregister_callback(NEBCALLBACK_HOST_CHECK_DATA, neb2ipc_handle_data);
 	neb_deregister_callback(NEBCALLBACK_SERVICE_CHECK_DATA, neb2ipc_handle_data);
-  neb_deregister_callback(NEBCALLBACK_DOWNTIME_DATA, neb2ipc_handle_data);
 
 	/* log a message to the Nagios log file */
 	snprintf(temp_buffer, sizeof(temp_buffer) - 1, "neb2ipc: Goodbye!\n");
@@ -163,10 +161,12 @@ int neb2ipc_handle_data(int event_type, void *data) {
 	nebstruct_service_check_data *scdata = NULL;
 
 	buf.mtype = event_type;
+
 	/* what type of event/data do we have? */
 	switch (event_type) {
 
 	case NEBCALLBACK_HOST_CHECK_DATA:
+
 		if ((hcdata = (nebstruct_host_check_data *) data)) {
 
 			if (hcdata->type != NEBTYPE_HOSTCHECK_PROCESSED) {
@@ -183,32 +183,34 @@ int neb2ipc_handle_data(int event_type, void *data) {
 						"Host check error: Missing one or more parameters:\n  host_name: %s\n  output: %s",
 						hcdata->host_name, hcdata->output);
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+				printf("teste 1");
 				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
 
 				return 0;
 			}
-      host *hst;
-      hst = find_host(hcdata->host_name);
-<<<<<<< .merge_file_vY2WXT
-      if (hst->scheduled_downtime_depth == HOST_DOWN) {
-       snprintf(temp_buffer, sizeof(temp_buffer) - 1, "Host '%s' is currently in scheduled downtime\0" ,hst->name);
-       temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
-       write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
-      }
- 
+			
+			host *hst;
+			hst = find_host(hcdata->host_name);
+			if (hst->name == NULL) {
+			  snprintf(temp_buffer, sizeof(temp_buffer) - 1, "find_host() returned null");
+     	  write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+			  return 0;
+                	}
 
-			/*send message to message queue */
-			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%i^%s^%i\0",
-					hcdata->host_name, hcdata->state, hcdata->output, hst->scheduled_downtime_depth);
-=======
-//      if (hst->current_state == HOST_DOWN) {
-        snprintf(temp_buffer, sizeof(temp_buffer) - 1, "Host '%s' is currently in scheduled downtime (host check): '%d'" , hcdata->host_name, hst->scheduled_downtime_depth);
-        write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
-//      }
+	
+		
+			#ifdef DEBUG
+			if (hst->scheduled_downtime_depth == HOST_DOWN) {
+		  	  snprintf(temp_buffer, sizeof(temp_buffer) - 1, "Host '%s' is currently in scheduled downtime\0" ,hst->name);
+		          temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+        		  write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+       			}
+			#endif
+  
 			/* send message to message queue */
-			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%i^%s\0",
-					hcdata->host_name, hcdata->state, hcdata->output);
->>>>>>> .merge_file_Kvy1GT
+			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%i^%i^%s\0",
+			hcdata->host_name, hcdata->state, hst->scheduled_downtime_depth, hcdata->output);
+
 			if (msgsnd(msqid, (struct buf *) &buf, sizeof(buf), IPC_NOWAIT)
 					== -1) {
 				snprintf(temp_buffer, sizeof(temp_buffer) - 1,
@@ -217,11 +219,11 @@ int neb2ipc_handle_data(int event_type, void *data) {
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
 			}
-		
+		}
 		break;
-    }
 
 	case NEBCALLBACK_SERVICE_CHECK_DATA:
+
 		if ((scdata = (nebstruct_service_check_data *) data)) {
 			if (scdata->type != NEBTYPE_SERVICECHECK_PROCESSED) {
 				// Check not processed yet
@@ -278,7 +280,7 @@ int neb2ipc_handle_data(int event_type, void *data) {
 				}
 				
 				#ifdef DEBUG
-				sprintf(temp_buffer, "recebido: %s -- hostname: %s -- output: %s", svc->service_check_command, scdata->host_name, scdata->output);
+				sprintf(temp_buffer, "recebido: %s -- hostname: %s -- output: %s -- downtime_depth: %i", svc->service_check_command, scdata->host_name, scdata->output, svc->scheduled_downtime_depth);
 				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
 				#endif
 			}
@@ -298,34 +300,24 @@ int neb2ipc_handle_data(int event_type, void *data) {
 
 				return 0;
 			}
-      
-      host *hst;
-      hst = find_host(scdata->host_name);
-<<<<<<< .merge_file_vY2WXT
-      if (hst->scheduled_downtime_depth == HOST_DOWN) {
-        snprintf(temp_buffer, sizeof(temp_buffer) - 1, "Host '%s' is currently in scheduled downtime\0" ,scdata->host_name);
-        temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
-        write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
-      }
-
-			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%s^%i^%s^%i\0",
-					scdata->host_name, command_name, scdata->state,
-					scdata->output, hst->scheduled_downtime_depth);
-=======
-//      if (hst->current_state == HOST_DOWN) {
-        snprintf(temp_buffer, sizeof(temp_buffer) - 1, "Host '%s' is currently in scheduled downtime (service check)  '%i'" , scdata->host_name, hst->current_state);
-        temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
-        write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
-//      }
-//      snprintf(temp_buffer, sizeof(temp_buffer) - 1, "xxx = %s %s %i\0" ,scdata->host_name, hst->name, hst->scheduled_downtime_depth);
-
-			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%s^%i^%s\0",
-					scdata->host_name, command_name, scdata->state,
-					scdata->output);
->>>>>>> .merge_file_Kvy1GT
+			host *hst;
+			hst = find_host(scdata->host_name);
+			if (hst == NULL) {
+			  snprintf(temp_buffer, sizeof(temp_buffer) - 1, "find_host() returned null");
+                          write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+			  return 0;
+			}
+			#ifdef DEBUG
+			if (hst->scheduled_downtime_depth == HOST_DOWN) {
+			  snprintf(temp_buffer, sizeof(temp_buffer) - 1, "Host '%s' is currently in scheduled downtime\0" ,scdata->host_name);
+			  temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+			  write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+			}
+			#endif
+			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%s^%i^%i^%s\0",
+					scdata->host_name, command_name, scdata->state, hst->scheduled_downtime_depth, scdata->output);
 
 			/* debug log*/
-
 			#ifdef DEBUG
 			snprintf(temp_buffer, sizeof(temp_buffer) - 1,
 					"service name> %s description> %s for> host %s",
@@ -335,23 +327,23 @@ int neb2ipc_handle_data(int event_type, void *data) {
 			write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
 			#endif
 
-
 			if (msgsnd(msqid, (struct buf *) &buf, sizeof(buf), IPC_NOWAIT)
 					== -1) {
 				snprintf(temp_buffer, sizeof(temp_buffer) - 1,
 						" Error to send message to queue id %i: %s", msqid,
-						strerror(errno));
+						strerror(errno), hst->scheduled_downtime_depth);
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
-
 				write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
-		
+			}
+
+		}
 
 		break;
-    }
 
 	default:
 		break;
-    }
-  }
+	}
+
 	return 0;
 }
+

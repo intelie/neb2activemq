@@ -26,7 +26,7 @@ def send_messages(mq, service_counter, status_counter, test_service, downtime, h
 
 
 def main(test_service):
-    downtime = 1
+    downtime = 1;
     mq = sysv_ipc.MessageQueue(123456, flags=sysv_ipc.IPC_CREAT, mode=0644)
     service_counter = status_counter = 0
     try:

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ENV=dev
+ENV=prod
 
 DAEMON=nebpublisher.py
 NAME=nebpublisher
