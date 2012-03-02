@@ -58,7 +58,6 @@ class Parser():
             info = sys.exc_info()
             import traceback
             traceback.print_tb(info[2])
-            print str(info)
             logger.warn('Unknown exception %s' % str(info))
             exit(1) #Houston!
 
@@ -71,24 +70,23 @@ class Parser():
         return
 
     def parse_service_check(self, message):
-        logger.debug("message: %s" % message)
+        logger.debug("Message %s - service check" % message)
         if message is None:
             return BAD_FORMAT
-        logger.debug("Message %s - service check" % message)
         data = []
         data = message.split('^')
 
         if len(data) < 5:
             return BAD_FORMAT
-
+	
+	if not data[0] or not data[1] or not data[2] or not data[3] or not data[4]:
+            return BAD_FORMAT	
+	
         host = data[0]
         command_name = data[1]
         state = data[2]
         downtime = data[3]
         message = data[4]
-
-        if not host or not command_name or not state or not message:
-            return BAD_FORMAT
 
         logger.debug("Host %s - command_name %s - state %s - downtime %s - output %s" % \
                      (host, command_name, state, downtime, message))
@@ -112,8 +110,8 @@ class Parser():
 
 
     def parse_host_check(self, message):
-        downtime = 1
-        if not message:
+        
+	if not message:
             return BAD_FORMAT
 
         logger.debug("Message %s - host check" % message)
@@ -121,13 +119,13 @@ class Parser():
         data = message.split('^')
         if len(data) < 4:
             return BAD_FORMAT
-        if not data[0] or not data[1] or not data[2]:
+        if not data[0] or not data[1] or not data[2] or not data[3]:
             return BAD_FORMAT
         host = data[0]
         state = data[1]
         downtime = data[2]
         output = data[3]
-        logger.debug("Host %s - output %s" % (host,output) ) 
+        logger.debug("Host %s - state %s - downtime %i output %s" % (host, state, downtime, output) )
         topic = self.topics.expressions['host']
         event = self.create_event_from_regexp(host, downtime, output, topic)
 
@@ -138,7 +136,9 @@ class Parser():
 
 
     def create_event_from_regexp(self, host, downtime, message, topic):
-        event = {'host' : host}
+        event['host'] = host
+	event['downtime'] = downtime
+	event['description'] = message
         logger.debug('Message to be matched: %s \n Topic: %s' % (message, str(topic)))
         match = False
         #iterate over items in command (labelFilter, eventtype level)
@@ -159,9 +159,7 @@ class Parser():
                         else:
                             # if groups in regexp and the number of properties match consider it a match
                             match = True
-                            logger.debug("Deu true no match")
                             event['eventtype'] = item['eventtype']
-                            event['description'] = message
 
                             # if the regex contains an specific event type, override it
                             if 'eventtype' in subitem and subitem['eventtype'] != None:
@@ -172,7 +170,7 @@ class Parser():
                                 if m.group(i) != None:
                                     event[property] = m.group(i)
                                     i = i + 1
-                            event['downtime'] = downtime
+                            
                             # stop iterating over subitem
                             break
 

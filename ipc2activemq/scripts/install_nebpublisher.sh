@@ -1,5 +1,5 @@
 cd ../src
-sudo python2.7 setup.py install
+sudo python2.6 setup.py install
 if [ $? != 0 ]
 then
   echo "[NEBPUBLISHER NOT INSTALLED. ABORTING.]"
