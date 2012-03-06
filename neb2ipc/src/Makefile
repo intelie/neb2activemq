@@ -14,7 +14,7 @@ MOD_LDFLAGS=-shared
 LDFLAGS=
 LIBS=
 DBG_FLAGS= -DDEBUG=1
-TESTING_FLAGS = -lcmockery
+TESTING_FLAGS = -lcmockery -std=c99
 
 CP=@CP@
 

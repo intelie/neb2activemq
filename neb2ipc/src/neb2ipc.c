@@ -32,6 +32,8 @@
 /* specify event broker API version (required) */
 NEB_API_VERSION( CURRENT_NEB_API_VERSION);
 
+int statusOfCurrentMessage;
+
 /* variables for ipc */
 #define KEY 123456
 int msqid;
@@ -39,10 +41,6 @@ struct my_msgbuf {
 	long mtype;
 	char mtext[512];
 } buf; 
-
-/*external variable for testing, declared in testing.h */
-  int statusOfCurrentMessage = 0;
-
 
 /* used for logging*/
 char temp_buffer[1024];
@@ -161,14 +159,17 @@ void neb2ipc_reminder_message(char *message) {
 /* handle data from Nagios daemon */
 int neb2ipc_handle_data(int event_type, void *data) {
 
+/*external variable for testing, declared in testing.h */
+  statusOfCurrentMessage = INITIAL_VALUE;
+
 	char CHECK_NRPE[] = "check_nrpe!";
 	int INDEX_AFTER_CHECK_NRPE = strlen(CHECK_NRPE);
 
 	nebstruct_host_check_data *hcdata = NULL;
 	nebstruct_service_check_data *scdata = NULL;
-
+  
 	buf.mtype = event_type;
-
+  
 	/* what type of event/data do we have? */
 	switch (event_type) {
 
@@ -177,7 +178,7 @@ int neb2ipc_handle_data(int event_type, void *data) {
 		if ((hcdata = (nebstruct_host_check_data *) data)) {
 			if (hcdata->type != NEBTYPE_HOSTCHECK_PROCESSED) {
 				// Check not processed yet
-        statusOfCurrentMessage = HOST_CHECK_N_PROCESSED;
+        statusOfCurrentMessage = ERROR_CHECK_NOT_PROCESSED;
 
 				return 0;
 			}
@@ -189,7 +190,7 @@ int neb2ipc_handle_data(int event_type, void *data) {
 						"Host check error: Missing output parameter");
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
-        statusOfCurrentMessage = MISSING_PARAMETER;
+        statusOfCurrentMessage = ERROR_MISSING_PARAMETER;
 
 				return 0;
       }
@@ -201,18 +202,32 @@ int neb2ipc_handle_data(int event_type, void *data) {
 						"Host check error: Missing host_name parameter");
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
-        statusOfCurrentMessage = MISSING_PARAMETER;
+        statusOfCurrentMessage = ERROR_MISSING_PARAMETER;
 				return 0;
       }
       
 			host *hst;
 			hst = find_host(hcdata->host_name);
 			if (hst == NULL) {
-			  snprintf(temp_buffer, sizeof(temp_buffer) - 1, "find_host() returned null, message sent anyway");
-        hst->scheduled_downtime_depth = ERROR_FIND_HOST;
-     	  write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
-        statusOfCurrentMessage = FIND_HOST_NULL;
+       	snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%i^%i^%s\0",
+		  	hcdata->host_name, hcdata->state, ERROR_FIND_HOST,hcdata->output);
 
+        if (msgsnd(msqid, (struct buf *) &buf, sizeof(buf), IPC_NOWAIT) == -1) {
+				  snprintf(temp_buffer, sizeof(temp_buffer) - 1,
+					  	"Error to send message to queue id %i: %s", msqid,
+						  strerror(errno));
+				  temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+				  write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
+          statusOfCurrentMessage = ERROR_MESSAGE_NOT_SENT_AND_FIND_HOST_NULL;
+
+          return 0;
+			  }
+
+        snprintf(temp_buffer, sizeof(temp_buffer) - 1, "find_host() returned null, sent anyway");
+     	  write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+
+        statusOfCurrentMessage = ERROR_FIND_HOST_NULL;
+        return 0;
       }
 
 			#ifdef DEBUG
@@ -234,6 +249,7 @@ int neb2ipc_handle_data(int event_type, void *data) {
 						strerror(errno));
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
+        statusOfCurrentMessage = ERROR_MESSAGE_NOT_SENT;
 			}
 		}
 		break;
@@ -249,7 +265,7 @@ int neb2ipc_handle_data(int event_type, void *data) {
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
 				#endif
-        statusOfCurrentMessage = SVC_CHECK_N_PROCESSED;
+        statusOfCurrentMessage = ERROR_CHECK_NOT_PROCESSED;
 
 				return 0;
 			}
@@ -267,7 +283,7 @@ int neb2ipc_handle_data(int event_type, void *data) {
 							scdata->service_description, scdata->host_name);
 					temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 					write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
-          statusOfCurrentMessage = NO_SVC_IN_HOST;
+          statusOfCurrentMessage = ERROR_NO_SVC_IN_HOST;
 
 					return 0;
 				}
@@ -312,7 +328,7 @@ int neb2ipc_handle_data(int event_type, void *data) {
 						"Service check error: Missing host_name parameter");
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
-        statusOfCurrentMessage = MISSING_PARAMETER;
+        statusOfCurrentMessage = ERROR_MISSING_PARAMETER;
 
 				return 0;
 			}
@@ -324,7 +340,7 @@ int neb2ipc_handle_data(int event_type, void *data) {
 						"Service check error: Missing command_name parameter");
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
-        statusOfCurrentMessage = MISSING_PARAMETER;
+        statusOfCurrentMessage = ERROR_MISSING_PARAMETER;
 
 				return 0;
 			}
@@ -336,7 +352,7 @@ int neb2ipc_handle_data(int event_type, void *data) {
 						"Service check error: Missing output parameter");
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
-        statusOfCurrentMessage = MISSING_PARAMETER;
+        statusOfCurrentMessage = ERROR_MISSING_PARAMETER;
 
 				return 0;
 			}
@@ -344,10 +360,24 @@ int neb2ipc_handle_data(int event_type, void *data) {
 			host *hst;
 			hst = find_host(scdata->host_name);
 			if (hst == NULL) {
-			  snprintf(temp_buffer, sizeof(temp_buffer) - 1, "find_host() returned null, message sent anyway");
-        hst->scheduled_downtime_depth = ERROR_FIND_HOST;
-        write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
-        statusOfCurrentMessage = FIND_HOST_NULL;
+        snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%s^%i^%i^%s\0",
+				scdata->host_name, command_name, scdata->state,ERROR_FIND_HOST, scdata->output);
+        if (msgsnd(msqid, (struct buf *) &buf, sizeof(buf), IPC_NOWAIT) == -1) {
+				  snprintf(temp_buffer, sizeof(temp_buffer) - 1,
+						      "Error to send message to queue id %i: %s", msqid,
+						      strerror(errno));
+				  temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+				  write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
+          statusOfCurrentMessage = ERROR_MESSAGE_NOT_SENT_AND_FIND_HOST_NULL;
+
+          return 0;
+			  }
+
+        snprintf(temp_buffer, sizeof(temp_buffer) - 1, "find_host() returned null, sent anyway");
+     	  write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+
+        statusOfCurrentMessage = ERROR_FIND_HOST_NULL;
+        return 0;
 
 			}
 			#ifdef DEBUG
@@ -377,7 +407,7 @@ int neb2ipc_handle_data(int event_type, void *data) {
 						strerror(errno));
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
-        statusOfCurrentMessage = MESSAGE_NOT_SENT;
+        statusOfCurrentMessage = ERROR_MESSAGE_NOT_SENT;
 			}
 
 		}
@@ -385,7 +415,7 @@ int neb2ipc_handle_data(int event_type, void *data) {
 		break;
 
 	default:
-    statusOfCurrentMessage = EVENT_TYPE_UNKNOWN;
+    statusOfCurrentMessage = ERROR_EVENT_TYPE_UNKNOWN;
 		break;
 	}
 

@@ -26,7 +26,7 @@ def install(package_name, file_version):
       print "[ABORTING.]"
       exit(-1)
     os.chdir("../lib/%s" % file_version)
-    os.system('sudo python2.6 setup.py install')
+    os.system('sudo python setup.py install')
     os.system('sudo rm -rf ../lib/%s' % file_version)
     os.chdir("../../scripts")
     try:

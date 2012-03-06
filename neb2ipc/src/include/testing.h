@@ -1,13 +1,15 @@
-#ifndef RETURN_MACROS_H
-#define RETURN_MACROS_H
+#ifndef TESTING_H
+#define TESTING_H
 
-#define MISSING_PARAMETER       1
-#define FIND_HOST_NULL          2
-#define NO_SVC_IN_HOST          3
-#define HOST_CHECK_N_PROCESSED  4
-#define SVC_CHECK_N_PROCESSED   5
-#define EVENT_TYPE_UNKNOWN      6
-#define MESSAGE_NOT_SENT        7
+#define INITIAL_VALUE                               0
+#define ERROR_MISSING_PARAMETER                     1
+#define ERROR_FIND_HOST_NULL                        2
+#define ERROR_NO_SVC_IN_HOST                        3
+#define ERROR_CHECK_NOT_PROCESSED                   4
+#define ERROR_EVENT_TYPE_UNKNOWN                    6
+#define ERROR_MESSAGE_NOT_SENT                      7
+#define ERROR_MESSAGE_NOT_SENT_AND_FIND_HOST_NULL   8
+
 
 extern int statusOfCurrentMessage;
 

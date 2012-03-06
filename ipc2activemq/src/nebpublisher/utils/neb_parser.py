@@ -112,7 +112,7 @@ class Parser():
     def parse_host_check(self, message):
         
 	if not message:
-            return BAD_FORMAT
+        return BAD_FORMAT
 
         logger.debug("Message %s - host check" % message)
         data = []
@@ -137,8 +137,8 @@ class Parser():
 
     def create_event_from_regexp(self, host, downtime, message, topic):
         event['host'] = host
-	event['downtime'] = downtime
-	event['description'] = message
+	    event['downtime'] = downtime
+	    event['description'] = message
         logger.debug('Message to be matched: %s \n Topic: %s' % (message, str(topic)))
         match = False
         #iterate over items in command (labelFilter, eventtype level)
