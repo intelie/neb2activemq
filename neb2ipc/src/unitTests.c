@@ -68,6 +68,8 @@ struct my_msgbuf {
     char mtext[512];
 } buf;
 
+ struct msqid_ds *buf2;
+
 struct host_struct hst;
 struct service_struct svc;
 int event_type;
@@ -148,12 +150,15 @@ void setExpectedMessage(int type) {
 }
 
 void FillMessageQueue(void) {
-
   do
     msgsnd(msqid, ExpectedMessage, sizeof ExpectedMessage, IPC_NOWAIT);
   while
     (msgsnd(msqid, ExpectedMessage, sizeof ExpectedMessage, IPC_NOWAIT) != -1);
 
+}
+
+void EmptyMessageQueue(void) {
+  msgctl(msqid, IPC_RMID, buf2);
 }
 
 void verifyIfACorrectMessageWillBeSentEvenIfFindHostReturnsNULL (void **state) {
@@ -243,6 +248,31 @@ void TestIfWorkingWithCorrectParameters (void **state) {
   }
 }
 
+void assertNoMessageWasSentIfQueueFull (void **state) {
+
+  FillMessageQueue();
+  for (int i = 0; i < 2; i++) {
+    createNebEvent(eventTypes[i].type, NAGIOS_CHECK_HOST_NAME, NAGIOS_CHECK_OUTPUT);
+    will_return(find_host, &hst);
+    neb2ipc_handle_data(eventTypes[i].type, eventTypes[i].event);
+    assert_int_equal(statusOfCurrentMessage, ERROR_MESSAGE_NOT_SENT);
+  }
+//  EmptyMessageQueue();
+}
+
+void  assertNoMessageWasSentIfQueueFullAndFIND_HOSTNULL (void **state) {
+
+ // FillMessageQueue();
+  for (int i = 0; i < 2; i++) {
+    createNebEvent(eventTypes[i].type, NAGIOS_CHECK_HOST_NAME, NAGIOS_CHECK_OUTPUT);
+    will_return(find_host, NULL);
+    neb2ipc_handle_data(eventTypes[i].type, eventTypes[i].event);
+    assert_int_equal(statusOfCurrentMessage, ERROR_MESSAGE_NOT_SENT_AND_FIND_HOST_NULL);
+  }
+  EmptyMessageQueue();
+
+}
+
 int main(int argc, char *argv[]) {
   const UnitTest tests[] = {
                             unit_test(verifyIfACorrectMessageWillBeSentEvenIfFindHostReturnsNULL),
@@ -253,6 +283,8 @@ int main(int argc, char *argv[]) {
                             unit_test(verifyThatIfMessageIsNULLThenItWasNotSent), 
                             unit_test(verifyThatIfMessageIsEmptyThenItWasNotSent),
                             unit_test(TestIfWorkingWithCorrectParameters),
+                            unit_test(assertNoMessageWasSentIfQueueFull),
+                            unit_test(assertNoMessageWasSentIfQueueFullAndFIND_HOSTNULL),
                            };
 return run_tests(tests);
 }

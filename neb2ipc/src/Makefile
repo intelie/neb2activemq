@@ -29,7 +29,7 @@ neb2ipc: neb2ipc.c
 neb2ipc_debug: neb2ipc.c
 	$(CC) $(MOD_CFLAGS) $(CFLAGS) $(DBG_FLAGS) -o neb2ipc.o neb2ipc.c $(MOD_LDFLAGS) $(LDFLAGS) $(LIBS)
 
-test: unitTests.c neb2ipc.c 
+test: unitTests.c neb2ipc.c
 	$(CC) $(CFLAGS) -o test neb2ipc.c unitTests.c $(TESTING_FLAGS) 
 
 clean:
