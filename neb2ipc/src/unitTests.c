@@ -23,6 +23,7 @@
 #include <setjmp.h>
 #include <google/cmockery.h>
 #include "./include/testing.h"
+#include "./include/neb2ipc.h"
 
 #define NAGIOS_CHECK_OUTPUT "HTTP OK: HTTP/1.1 200 OK - 454 bytes in 0.001 second response time |time=0.000758s;;;0.000000 size=454B;;;0"
 #define NAGIOS_CHECK_HOST_NAME "localhost"
@@ -32,20 +33,20 @@
 #define MORE_THAN_ONE_MESSAGE_WAS_SENT 2
 
 int neb_register_callback(int callback_type, void *mod_handle, int priority, int (*callback_func)(int,void *)) {
-  return (int) mock();
+  return *(int *) mock();
 }
 
 int schedule_new_event(int event_type, int high_priority, time_t run_time, int recurring, unsigned long event_interval, void *timing_func, int compensate_for_time_change, void *event_data, void *event_args, int event_options) {
 
-  return (int) mock();
+  return *(int *) mock();
 }
 
 int neb_set_module_info(void *handle, int type, char *data){
-  return (int) mock();
+  return *(int *) mock();
 }
 
 int neb_deregister_callback(int callback_type, int (*callback_func)(int,void *)){
-  return (int) mock();
+  return *(int *) mock();
 }
 
 int write_to_all_logs(char *string, unsigned long type) {
@@ -89,7 +90,7 @@ void createNebEvent(int check, char *host_name, char *output) {
     event_type = check;
 
     scdata.type = NEBTYPE_SERVICECHECK_PROCESSED;
-    scdata.command_name = NAGIOS_CHECK_OUTPUT;
+    scdata.command_name = "check_http";
     scdata.host_name = host_name;
     scdata.output = output;
 
@@ -130,7 +131,7 @@ void eventTypeFill(void) {
     eventTypes[1].event = (nebstruct_service_check_data *) &scdata;
 }
 
-void makeTypeCast() {
+void unprocessCheck() {
 
     hcdata.type = 1; //random number other than 801, NEBTYPE_HOSTCHECK_PROCESSED
     scdata.type = 1; //random number other than 701, NEBTYPE_SERVICECHECK_PROCESSED
@@ -144,6 +145,15 @@ void setExpectedMessage(int type) {
   if (type == NEBCALLBACK_SERVICE_CHECK_DATA)
      snprintf(ExpectedMessage, sizeof (ExpectedMessage) - 1, "%s^%s^%i^%i^%s\0",
           scdata.host_name, scdata.command_name, scdata.state, hst.scheduled_downtime_depth, scdata.output);
+}
+
+void FillMessageQueue(void) {
+
+  do
+    msgsnd(msqid, ExpectedMessage, sizeof ExpectedMessage, IPC_NOWAIT);
+  while
+    (msgsnd(msqid, ExpectedMessage, sizeof ExpectedMessage, IPC_NOWAIT) != -1);
+
 }
 
 void verifyIfACorrectMessageWillBeSentEvenIfFindHostReturnsNULL (void **state) {
@@ -173,7 +183,7 @@ void verifyThatNoMessageWasSentIfCheckNotProcessed (void **state) {
   eventTypeFill();
   for (int i = 0; i < 2; i++) {
     createNebEvent(eventTypes[i].type, NAGIOS_CHECK_HOST_NAME, NAGIOS_CHECK_OUTPUT);
-    makeTypeCast();
+    unprocessCheck();
     neb2ipc_handle_data(eventTypes[i].type, eventTypes[i].event);
     assert_int_equal(statusOfCurrentMessage, ERROR_CHECK_NOT_PROCESSED);
     assert_int_equal(checkIfQueueIsEmpty(msqid), QUEUE_OK);
