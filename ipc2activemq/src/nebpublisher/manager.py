@@ -12,13 +12,14 @@ import copy
 import json
 from utils import neb_parser
 from connection_adapter import *
+import signal
 
 
 logger = logging.getLogger("nebpublisher.manager")
-
+logger.addHandler(logging.StreamHandler())
 
 try:
-    import chardet
+   import chardet
 except ImportError:
     logger.error('chardet is not installed - manager will discard all messages \
 if UnicodeDecodeError is raised')
@@ -29,6 +30,9 @@ try:
 except ImportError:
     logger.error("Could not import sysv_ipc. See README for installation instructions.")
     exit(1)
+
+def signal_handler(signum, frame):
+    raise KeyboardInterrupt, "Signal handler"
 
 
 class Manager(object):
