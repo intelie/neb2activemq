@@ -11,18 +11,20 @@ def send_message(mq, message):
     except sysv_ipc.BusyError:
         print "Queue is full, ignoring"
 
-def send_messages(mq, service_counter, status_counter, test_service,
+def send_messages(mq, service_counter, status_counter, test_service, downtime=1,
                   host='some_host'):
     try:
         for key, item in test_service.iteritems():
             if type(item) == str:
                 #message = '%s^%s^%s^%s^0\0' % (host, key, status_counter, item)
-                message = '%s^%s^%s^6^%s\0' % (host, key, status_counter, item)
+                message = '%s^%s^%s^%i^%s\0' % (host, key, status_counter,
+                        downtime, item)
                 send_message(mq, message)
             elif type(item) == list:
                 for msg in item:
                     #message = '%s^%s^%s^%s^0\0' % (host, key, status_counter, msg)
-                    message = '%s^%s^%s^7^%s\0' % (host, key, status_counter, msg)
+                    message = '%s^%s^%s^%i^%s\0' % (host, key, status_counter,
+                            downtime, msg)
                     send_message(mq, message)
     except Exception as e:
         print "Caugh an unknown exception, ignoring.", e

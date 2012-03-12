@@ -48,11 +48,11 @@ class Parser():
         self.switch = {13: self.parse_service_check,
                        14: self.parse_host_check}
 
-    def parse(self, message_type, message):
+    def parse(self, type, message):
         try:
-            return self.switch[message_type](message)
+            return self.switch[type](message)
         except KeyError, e:
-            self.not_implemented_type(message_type)
+            self.not_implemented_type(type)
             return NOT_IMPLEMENTED
         except Exception, e:
             info = sys.exc_info()
@@ -136,9 +136,9 @@ class Parser():
 
 
     def create_event_from_regexp(self, host, downtime, message, topic):
-        event['host'] = host
-	event['downtime'] = downtime
-	event['description'] = message
+        event = {'host' : host}
+	    event['downtime'] = downtime
+	    event['description'] = message
         logger.debug('Message to be matched: %s \n Topic: %s' % (message, str(topic)))
         match = False
         #iterate over items in command (labelFilter, eventtype level)
