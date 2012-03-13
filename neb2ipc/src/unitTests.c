@@ -257,12 +257,10 @@ void assertNoMessageWasSentIfQueueFull (void **state) {
     neb2ipc_handle_data(eventTypes[i].type, eventTypes[i].event);
     assert_int_equal(statusOfCurrentMessage, ERROR_MESSAGE_NOT_SENT);
   }
-//  EmptyMessageQueue();
 }
 
 void  assertNoMessageWasSentIfQueueFullAndFIND_HOSTNULL (void **state) {
 
- // FillMessageQueue();
   for (int i = 0; i < 2; i++) {
     createNebEvent(eventTypes[i].type, NAGIOS_CHECK_HOST_NAME, NAGIOS_CHECK_OUTPUT);
     will_return(find_host, NULL);
@@ -270,6 +268,8 @@ void  assertNoMessageWasSentIfQueueFullAndFIND_HOSTNULL (void **state) {
     assert_int_equal(statusOfCurrentMessage, ERROR_MESSAGE_NOT_SENT_AND_FIND_HOST_NULL);
   }
   EmptyMessageQueue();
+  //neb2activemq requires the queue to exist to be installed. creating it...
+  msgget(123456, IPC_CREAT | 0600);
 
 }
 
