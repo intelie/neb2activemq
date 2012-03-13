@@ -5,18 +5,18 @@
 
 
 #PATHS RECOMMENDED BY NAGIOS DOCUMENTATION. CHANGE THESE IF NECESSARY
-NAGIOS_PATH="/usr/local/nagios"
+NAGIOS_PATH="/usr/bin/nagios"
 NAGIOS_DAEMON="/etc/init.d/nagios"
 NEB2IPC_DIR="../src"
-NAGIOS_BIN="${NAGIOS_PATH}/bin"
-NAGIOS_CFG="${NAGIOS_PATH}/etc/nagios.cfg"
+NAGIOS_BIN="$/usr/bin"
+NAGIOS_CFG="/etc/nagios/nagios.cfg"
 LINE_TO_ADD="broker_module=${NAGIOS_BIN}/neb2ipc.o"
 
 
 #SMOKE TESTING
-if [ ! -f "${NAGIOS_PATH}/bin/nagios" ]
+if [ ! -f "${NAGIOS_PATH}" ]
 then
-  echo "[Nagios binary not found in ${NAGIOS_PATH}/bin]"
+  echo "[Nagios binary not found in ${NAGIOS_PATH}"
   echo "[HAVE YOU INSTALLED NAGIOS?]"
   exit -1
 fi
