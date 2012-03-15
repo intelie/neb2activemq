@@ -5,10 +5,10 @@ from nebpublisher import logger, utils
 
 #### Main settings ####
 
-BROKER=[('localhost', 61613)]     # Message Broker Target
+BROKER=[('riold122.globoi.com', 61613)]     # Message Broker Target
 CONN_SLEEP_DELAY = 3            # Time to way after a connection was lost
 
-MAX_QUEUE_SIZE = 100            # Max queue size. If equals to 0, queue is unbound!
+MAX_QUEUE_SIZE = 100              # Max queue size. If equals to 0, queue is unbound!
 QUEUE_SLEEP_TIME = 3            # Tempo que a thread espera se a queue estiver vazia
 
 

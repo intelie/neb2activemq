@@ -1,4 +1,4 @@
-cd ../src
+cd /home/intelie/neb2activemq/ipc2activemq/src
 sudo python setup.py install
 if [ $? != 0 ]
 then

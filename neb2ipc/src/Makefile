@@ -20,6 +20,7 @@ CP=@CP@
 
 all: neb2ipc test
 	./test
+	sudo ipcrm -Q 123456
 
 debug: neb2ipc_debug
 

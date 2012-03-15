@@ -13,13 +13,13 @@ then
 else
   echo "[PYTHON 2.6 NOT FOUND]"
   echo "[INSTALLING PYTHON 2.6]"
-  cd ../lib
+  cd /home/intelie/neb2activemq/ipc2activemq/lib
   tar -xzf Python-2.6.5.tgz
   cd Python-2.6.5
   ./configure
   make
   sudo make altinstall 
-  cd ../../scripts
+  cd /home/intelie/neb2activemq/ipc2activemq/scripts
   if [ $? = 0 ]
   then
     which python2.6 &>/dev/null

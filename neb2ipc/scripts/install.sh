@@ -4,18 +4,19 @@
 # INSTALLATION SCRIPT FROM THE SOURCE CODE
 
 
-NAGIOS_PATH="/usr/bin/nagios"
+#PATHS RECOMMENDED BY NAGIOS DOCUMENTATION. CHANGE THESE IF NECESSARY
+NAGIOS_PATH="/usr/local/nagios"
 NAGIOS_DAEMON="/etc/init.d/nagios"
 NEB2IPC_DIR="../src"
-NAGIOS_BIN="/usr/bin"
-NAGIOS_CFG="/etc/nagios/nagios.cfg"
+NAGIOS_BIN="${NAGIOS_PATH}/bin"
+NAGIOS_CFG="${NAGIOS_PATH}/etc/nagios.cfg"
 LINE_TO_ADD="broker_module=${NAGIOS_BIN}/neb2ipc.o"
 
 
 #SMOKE TESTING
-if [ ! -f "${NAGIOS_PATH}" ]
+if [ ! -f "${NAGIOS_PATH}/bin/nagios" ]
 then
-  echo "[Nagios binary not found in ${NAGIOS_PATH}"
+  echo "[Nagios binary not found in ${NAGIOS_PATH}/bin]"
   echo "[HAVE YOU INSTALLED NAGIOS?]"
   exit -1
 fi
@@ -45,10 +46,10 @@ then
   sudo sed -i "/^#broker_module.*neb2ipc.o/d" $NAGIOS_CFG
 fi
 
-NEB2IPC_LINE=`cat ${NAGIOS_CFG} | grep -on "broker_module.*neb2ipc.o" | cut -d: -f1`
+NEB2IPC_LINE=`cat $NAGIOS_CFG | grep -on "broker_module.*neb2ipc.o" | cut -d: -f1`
 if [ -z "$NEB2IPC_LINE" ] 
 then
-	BROKER_LINE=`cat ${NAGIOS_CFG} | grep -no "broker_module=" | cut -d: -f1 | tail -1`
+	BROKER_LINE=`cat $NAGIOS_CFG | grep -no "broker_module=" | cut -d: -f1 | tail -1`
   if [ -n "$BROKER_LINE" ]
   then
     echo "[Adding neb2ipc.o reference into nagios.cfg]"
@@ -68,7 +69,7 @@ sudo ${NAGIOS_DAEMON} restart
 
 
 #SIMPLE CHECK IF IT WAS SUCCESSFUL
-QUEUE_EXISTS=`sudo ipcs | grep "0x0001e240"` 
+QUEUE_EXISTS=`sudo ipcs | grep "0x0001e240.*nagios"` 
 if [ -n "$QUEUE_EXISTS" ]
 then
   echo "[MESSAGE QUEUE CREATED SUCCESSFULLY!]"

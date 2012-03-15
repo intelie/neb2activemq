@@ -125,7 +125,7 @@ class Parser():
         state = data[1]
         downtime = data[2]
         output = data[3]
-        logger.debug("Host %s - state %s - downtime %i output %s" % (host, state, downtime, output) )
+        #logger.debug("Host %s - state %s - downtime %i output %s" % (host, state, downtime, output) )
         topic = self.topics.expressions['host']
         event = self.create_event_from_regexp(host, downtime, output, topic)
 
@@ -137,8 +137,8 @@ class Parser():
 
     def create_event_from_regexp(self, host, downtime, message, topic):
         event = {'host' : host}
-	    event['downtime'] = downtime
-	    event['description'] = message
+        event['downtime'] = downtime
+        event['description'] = message
         logger.debug('Message to be matched: %s \n Topic: %s' % (message, str(topic)))
         match = False
         #iterate over items in command (labelFilter, eventtype level)
