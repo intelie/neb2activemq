@@ -14,7 +14,7 @@ else
   echo "[PYTHON 2.6 NOT FOUND]"
   echo "[INSTALLING PYTHON 2.6]"
   cd /home/intelie/neb2activemq/ipc2activemq/lib
-  tar -xzf Python-2.6.5.tgz
+  tar -xzf Python-2.6.5.tar.gz
   cd Python-2.6.5
   ./configure
   make
