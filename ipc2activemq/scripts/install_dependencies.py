@@ -17,19 +17,21 @@ def install(package_name, file_version):
     return 
   except:
     print "[INSTALLING %s]" % package_name
-    if os.path.isfile("/opt/intelie/neb2activemq/ipc2activemq/lib/%s.tar.gz" % file_version):
-      os.system('tar -xzf /opt/intelie/neb2activemq/ipc2activemq/lib/%s.tar.gz -C /opt/intelie/neb2activemq/ipc2activemq/lib' % file_version)
+    if os.path.isfile("../lib/%s.tar.gz" % file_version):
+      os.system('tar -xzf ../lib/%s.tar.gz -C ../lib' % file_version)
+    elif os.path.isfile("../lib/%s.tgz" % file_version):
+      os.system('tar -xzf ../lib/%s.tgz -C ../lib' % file_version)
     else:
       print "[PACKAGE NOT FOUND FOR %s]" % package_name
       print "[ABORTING.]"
       exit(-1)
-    os.chdir("/opt/intelie/neb2activemq/ipc2activemq/lib/%s" % file_version)
+    os.chdir("../lib/%s" % file_version)
     os.system('sudo python setup.py install')
-    os.chdir("/opt/intelie/neb2activemq/scripts")
+    os.system('sudo rm -rf ../lib/%s' % file_version)
+    os.chdir("../../scripts")
     try:
       exec "import %s" % package_name
       print "[%s INSTALLED!]" % package_name
-      os.system('sudo rm -rf /opt/intelie/neb2activemq/ipc2activemq/lib/%s' % file_version)
     except ImportError:
       print "[ERROR INSTALLING %s]" % package_name
       exit(-1)
