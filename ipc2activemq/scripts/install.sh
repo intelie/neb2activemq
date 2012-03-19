@@ -5,7 +5,7 @@ if [ $? != 0 ]
 then
   echo "[PYTHON NOT INSTALLED. ABORTING.]"
 else
-  sudo python install_dependencies.py
+  sudo python2.6 install_dependencies.py
   if [ $? != 0 ]
   then
     echo "[PYTHON DEPENDENCIES NOT INSTALLED. ABORTING.]"
