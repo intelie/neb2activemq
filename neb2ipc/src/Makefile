@@ -18,10 +18,7 @@ TESTING_FLAGS = -lcmockery -std=c99
 
 CP=@CP@
 
-all: neb2ipc test
-	sudo ipcrm -Q 123456
-	./test
-	sudo ipcrm -Q 123456
+all: neb2ipc
 
 debug: neb2ipc_debug
 
