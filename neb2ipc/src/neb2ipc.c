@@ -27,8 +27,12 @@
 
 #include <string.h>
 
+#include "./include/testing.h"
+
 /* specify event broker API version (required) */
 NEB_API_VERSION( CURRENT_NEB_API_VERSION);
+
+int statusOfCurrentMessage;
 
 /* variables for ipc */
 #define KEY 123456
@@ -36,7 +40,7 @@ int msqid;
 struct my_msgbuf {
 	long mtype;
 	char mtext[512];
-} buf;
+} buf; 
 
 /* used for logging*/
 char temp_buffer[1024];
@@ -154,43 +158,90 @@ void neb2ipc_reminder_message(char *message) {
 
 /* handle data from Nagios daemon */
 int neb2ipc_handle_data(int event_type, void *data) {
+
+/*external variable for testing, declared in testing.h */
+  statusOfCurrentMessage = INITIAL_VALUE;
+
 	char CHECK_NRPE[] = "check_nrpe!";
 	int INDEX_AFTER_CHECK_NRPE = strlen(CHECK_NRPE);
 
 	nebstruct_host_check_data *hcdata = NULL;
 	nebstruct_service_check_data *scdata = NULL;
-
+  
 	buf.mtype = event_type;
-
+  
 	/* what type of event/data do we have? */
 	switch (event_type) {
 
 	case NEBCALLBACK_HOST_CHECK_DATA:
 
 		if ((hcdata = (nebstruct_host_check_data *) data)) {
-
 			if (hcdata->type != NEBTYPE_HOSTCHECK_PROCESSED) {
 				// Check not processed yet
+        statusOfCurrentMessage = ERROR_CHECK_NOT_PROCESSED;
+
 				return 0;
 			}
 
-			if (hcdata->host_name == NULL || strlen(hcdata->host_name) == 0
-					|| hcdata->output == NULL || strlen(hcdata->output) == 0) {
-
-				snprintf(
+ if (hcdata->output == NULL || strlen(hcdata->output) == 0) {
+        snprintf(
 						temp_buffer,
 						sizeof(temp_buffer) - 1,
-						"Host check error: Missing one or more parameters:\n  host_name: %s\n  output: %s",
-						hcdata->host_name, hcdata->output);
+						"Host check error: Missing output parameter");
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+        statusOfCurrentMessage = ERROR_MISSING_PARAMETER;
 
 				return 0;
-			}
+      }
 
+      if (hcdata->host_name == NULL || strlen(hcdata->host_name) == 0) {
+        snprintf(
+						temp_buffer,
+						sizeof(temp_buffer) - 1,
+						"Host check error: Missing host_name parameter");
+				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+        statusOfCurrentMessage = ERROR_MISSING_PARAMETER;
+				return 0;
+      }
+      
+			host *hst;
+			hst = find_host(hcdata->host_name);
+			if (hst == NULL) {
+       	snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%i^%i^%s\0",
+		  	hcdata->host_name, hcdata->state, ERROR_FIND_HOST,hcdata->output);
+
+        if (msgsnd(msqid, (struct buf *) &buf, sizeof(buf), IPC_NOWAIT) == -1) {
+				  snprintf(temp_buffer, sizeof(temp_buffer) - 1,
+					  	"Error to send message to queue id %i: %s", msqid,
+						  strerror(errno));
+				  temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+				  write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
+          statusOfCurrentMessage = ERROR_MESSAGE_NOT_SENT_AND_FIND_HOST_NULL;
+
+          return 0;
+			  }
+
+        snprintf(temp_buffer, sizeof(temp_buffer) - 1, "find_host() returned null, sent anyway");
+     	  write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+
+        statusOfCurrentMessage = ERROR_FIND_HOST_NULL;
+        return 0;
+      }
+
+			#ifdef DEBUG
+			if (hst->scheduled_downtime_depth == HOST_DOWN) {
+		  	  snprintf(temp_buffer, sizeof(temp_buffer) - 1, "Host '%s' is currently in scheduled downtime\0" ,hst->name);
+		          temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+        		  write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+       			}
+			#endif
+      
 			/* send message to message queue */
-			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%i^%s\0",
-					hcdata->host_name, hcdata->state, hcdata->output);
+			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%i^%i^%s\0",
+			hcdata->host_name, hcdata->state, hst->scheduled_downtime_depth, hcdata->output);
+
 			if (msgsnd(msqid, (struct buf *) &buf, sizeof(buf), IPC_NOWAIT)
 					== -1) {
 				snprintf(temp_buffer, sizeof(temp_buffer) - 1,
@@ -198,6 +249,7 @@ int neb2ipc_handle_data(int event_type, void *data) {
 						strerror(errno));
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
+        statusOfCurrentMessage = ERROR_MESSAGE_NOT_SENT;
 			}
 		}
 		break;
@@ -213,6 +265,7 @@ int neb2ipc_handle_data(int event_type, void *data) {
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
 				#endif
+        statusOfCurrentMessage = ERROR_CHECK_NOT_PROCESSED;
 
 				return 0;
 			}
@@ -230,8 +283,11 @@ int neb2ipc_handle_data(int event_type, void *data) {
 							scdata->service_description, scdata->host_name);
 					temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 					write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+          statusOfCurrentMessage = ERROR_NO_SVC_IN_HOST;
+
 					return 0;
 				}
+			
 				if (svc->service_check_command != NULL) {
 					/* Checks if received by NRPE and remove "check_nrpe!" at the beggining */
 					if (strstr(svc->service_check_command, CHECK_NRPE) > 0) {
@@ -260,30 +316,79 @@ int neb2ipc_handle_data(int event_type, void *data) {
 				}
 				
 				#ifdef DEBUG
-				sprintf(temp_buffer, "recebido: %s -- hostname: %s -- output: %s", svc->service_check_command, scdata->host_name, scdata->output);
+				sprintf(temp_buffer, "recebido: %s -- hostname: %s -- output: %s -- downtime_depth: %i", svc->service_check_command, scdata->host_name, scdata->output, svc->scheduled_downtime_depth);
 				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
 				#endif
 			}
 
-
-			if (scdata->host_name == NULL || strlen(scdata->host_name) == 0
-					|| command_name == NULL || strlen(command_name) == 0
-					|| scdata->output == NULL || strlen(scdata->output) == 0) {
-
-				snprintf(
+      if (scdata->host_name == NULL || strlen(scdata->host_name) == 0) {
+        snprintf(
 						temp_buffer,
 						sizeof(temp_buffer) - 1,
-						"Service check error: Missing one or more parameters:\n  host_name: %s\n  command_name: %s\n  output: %s",
-						scdata->host_name, command_name, scdata->output);
+						"Service check error: Missing host_name parameter");
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+        statusOfCurrentMessage = ERROR_MISSING_PARAMETER;
 
 				return 0;
 			}
 
-			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%s^%i^%s\0",
-					scdata->host_name, command_name, scdata->state,
-					scdata->output);
+      if (command_name == NULL || strlen(command_name) == 0) {
+        snprintf(
+						temp_buffer,
+						sizeof(temp_buffer) - 1,
+						"Service check error: Missing command_name parameter");
+				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+        statusOfCurrentMessage = ERROR_MISSING_PARAMETER;
+
+				return 0;
+			}
+
+      if (scdata->output == NULL || strlen(scdata->output) == 0) {
+         snprintf(
+						temp_buffer,
+						sizeof(temp_buffer) - 1,
+						"Service check error: Missing output parameter");
+				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+        statusOfCurrentMessage = ERROR_MISSING_PARAMETER;
+
+				return 0;
+			}
+
+			host *hst;
+			hst = find_host(scdata->host_name);
+			if (hst == NULL) {
+        snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%s^%i^%i^%s\0",
+				scdata->host_name, command_name, scdata->state,ERROR_FIND_HOST, scdata->output);
+        if (msgsnd(msqid, (struct buf *) &buf, sizeof(buf), IPC_NOWAIT) == -1) {
+				  snprintf(temp_buffer, sizeof(temp_buffer) - 1,
+						      "Error to send message to queue id %i: %s", msqid,
+						      strerror(errno));
+				  temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+				  write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
+          statusOfCurrentMessage = ERROR_MESSAGE_NOT_SENT_AND_FIND_HOST_NULL;
+
+          return 0;
+			  }
+
+        snprintf(temp_buffer, sizeof(temp_buffer) - 1, "find_host() returned null, sent anyway");
+     	  write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+
+        statusOfCurrentMessage = ERROR_FIND_HOST_NULL;
+        return 0;
+
+			}
+			#ifdef DEBUG
+			if (hst->scheduled_downtime_depth == HOST_DOWN) {
+			  snprintf(temp_buffer, sizeof(temp_buffer) - 1, "Host '%s' is currently in scheduled downtime\0" ,scdata->host_name);
+			  temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+			  write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+			}
+			#endif
+			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%s^%i^%i^%s\0",
+					scdata->host_name, command_name, scdata->state, hst->scheduled_downtime_depth, scdata->output);
 
 			/* debug log*/
 			#ifdef DEBUG
@@ -302,6 +407,7 @@ int neb2ipc_handle_data(int event_type, void *data) {
 						strerror(errno));
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
+        statusOfCurrentMessage = ERROR_MESSAGE_NOT_SENT;
 			}
 
 		}
@@ -309,6 +415,7 @@ int neb2ipc_handle_data(int event_type, void *data) {
 		break;
 
 	default:
+    statusOfCurrentMessage = ERROR_EVENT_TYPE_UNKNOWN;
 		break;
 	}
 

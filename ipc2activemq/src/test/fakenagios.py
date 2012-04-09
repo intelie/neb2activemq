@@ -17,10 +17,12 @@ def send_messages(mq, service_counter, status_counter, test_service,
     try:
         for key, item in test_service.iteritems():
             if type(item) == str:
+                #message = '%s^%s^%s^%s^0\0' % (host, key, status_counter, item)
                 message = '%s^%s^%s^%s\0' % (host, key, status_counter, item)
                 send_message(mq, message)
             elif type(item) == list:
                 for msg in item:
+                    #message = '%s^%s^%s^%s^0\0' % (host, key, status_counter, msg)
                     message = '%s^%s^%s^%s\0' % (host, key, status_counter, msg)
                     send_message(mq, message)
     except Exception as e:

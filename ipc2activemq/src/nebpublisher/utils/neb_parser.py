@@ -70,29 +70,30 @@ class Parser():
         return
 
     def parse_service_check(self, message):
+        logger.debug("Message %s - service check" % message)
         if message is None:
             return BAD_FORMAT
-        logger.debug("Message %s - service check" % message)
         data = []
         data = message.split('^')
 
-        if len(data) < 4:
+        if len(data) < 5:
             return BAD_FORMAT
-
+	
+	if not data[0] or not data[1] or not data[2] or not data[3] or not data[4]:
+            return BAD_FORMAT	
+	
         host = data[0]
         command_name = data[1]
         state = data[2]
-        message = data[3]
+        downtime = data[3]
+        message = data[4]
 
-        if not host or not command_name or not state or not message:
-            return BAD_FORMAT
-
-        logger.debug("Host %s - command_name %s - state %s - output %s" % \
-                     (host, command_name, state, message))
+        logger.debug("Host %s - command_name %s - state %s - downtime %s - output %s" % \
+                     (host, command_name, state, downtime, message))
 
         if command_name in self.topics.expressions:
             topic = self.topics.expressions[command_name]
-            result = self.create_event_from_regexp(host, message, topic)
+            result = self.create_event_from_regexp(host, downtime,  message, topic)
             if result != BAD_FORMAT and result != NOT_IMPLEMENTED:
                 result['state'] = SERVICE_CHECK_MAP[int(state)]
                 return [result]
@@ -109,22 +110,24 @@ class Parser():
 
 
     def parse_host_check(self, message):
-        if not message:
-            return BAD_FORMAT
+        
+	if not message:
+        	return BAD_FORMAT
 
         logger.debug("Message %s - host check" % message)
         data = []
         data = message.split('^')
-        if len(data) < 3:
+        if len(data) < 4:
             return BAD_FORMAT
-        if not data[0] or not data[1] or not data[2]:
+        if not data[0] or not data[1] or not data[2] or not data[3]:
             return BAD_FORMAT
         host = data[0]
         state = data[1]
-        output = data[2]
-        logger.debug("Host %s - output %s" % (host,output) ) 
+        downtime = data[2]
+        output = data[3]
+        #logger.debug("Host %s - state %s - downtime %i output %s" % (host, state, downtime, output) )
         topic = self.topics.expressions['host']
-        event = self.create_event_from_regexp(host, output, topic)
+        event = self.create_event_from_regexp(host, downtime, output, topic)
 
         if event != BAD_FORMAT and event != NOT_IMPLEMENTED:
             event['state'] = HOST_CHECK_MAP[int(state)]
@@ -132,8 +135,10 @@ class Parser():
         return event
 
 
-    def create_event_from_regexp(self, host, message, topic):
+    def create_event_from_regexp(self, host, downtime, message, topic):
         event = {'host' : host}
+        event['downtime'] = downtime
+        event['description'] = message
         logger.debug('Message to be matched: %s \n Topic: %s' % (message, str(topic)))
         match = False
         #iterate over items in command (labelFilter, eventtype level)
@@ -155,7 +160,6 @@ class Parser():
                             # if groups in regexp and the number of properties match consider it a match
                             match = True
                             event['eventtype'] = item['eventtype']
-                            event['description'] = message
 
                             # if the regex contains an specific event type, override it
                             if 'eventtype' in subitem and subitem['eventtype'] != None:
@@ -166,6 +170,7 @@ class Parser():
                                 if m.group(i) != None:
                                     event[property] = m.group(i)
                                     i = i + 1
+                            
                             # stop iterating over subitem
                             break
 

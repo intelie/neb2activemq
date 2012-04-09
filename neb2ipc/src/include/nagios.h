@@ -193,6 +193,7 @@ extern "C" {
 #define HOST_UP				0
 #define HOST_DOWN			1
 #define HOST_UNREACHABLE		2	
+#define ERROR_FIND_HOST     3
 
 
 

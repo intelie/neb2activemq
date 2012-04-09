@@ -14,12 +14,12 @@ else
   echo "[PYTHON 2.6 NOT FOUND]"
   echo "[INSTALLING PYTHON 2.6]"
   cd ../lib
-  tar -xzf Python-2.6.5.tgz
+  tar -xzf Python-2.6.5.tar.gz
   cd Python-2.6.5
   ./configure
   make
   sudo make altinstall 
-  cd ../../scripts
+  cd ../scripts
   if [ $? = 0 ]
   then
     which python2.6 &>/dev/null

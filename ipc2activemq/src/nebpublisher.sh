@@ -1,8 +1,8 @@
 #!/bin/sh
 
-ENV=dev
+ENV=prod
 
-DAEMON=nebpublisher.py
+DAEMON=ipc2activemq.py
 NAME=nebpublisher
 DESC="nebpublisher daemon"
 
@@ -28,7 +28,7 @@ startdaemon(){
         echo "Daemon is running: $PIDFILE \n" 
     else
         echo "Starting $DESC: $DAEMON \n"
-        sudo -u nagios python2.6 $DAEMON --pidfile=$PIDFILE --env=$ENV
+        sudo -u nagios python $DAEMON --pidfile=$PIDFILE --env=$ENV
     fi
 }
 
@@ -46,7 +46,7 @@ stopdaemon(){
 }
 
 forcestop(){
-  sudo -u nagios ps -ef | grep  nebpublisher.py | grep -v grep | awk '{ print $2 }'| xargs kill -9
+  sudo -u nagios ps -ef | grep  ipc2activemq.py | grep -v grep | awk '{ print $2 }'| xargs kill -9
 }
 
 test -f $DAEMON || exit 0

@@ -12,13 +12,14 @@ import copy
 import json
 from utils import neb_parser
 from connection_adapter import *
+import signal
 
 
 logger = logging.getLogger("nebpublisher.manager")
-
+logger.addHandler(logging.StreamHandler())
 
 try:
-    import chardet
+   import chardet
 except ImportError:
     logger.error('chardet is not installed - manager will discard all messages \
 if UnicodeDecodeError is raised')
@@ -29,6 +30,9 @@ try:
 except ImportError:
     logger.error("Could not import sysv_ipc. See README for installation instructions.")
     exit(1)
+
+def signal_handler(signum, frame):
+    raise KeyboardInterrupt, "Signal handler"
 
 
 class Manager(object):
@@ -84,8 +88,9 @@ class Subscriber(threading.Thread):
                     logger.warn("Message should end with '\\0' character")
                     pass
                 message, char, garbage = message.partition('\0')
-                logger.debug("Message received. Type: %i Message: %s" %(message_type, str(message)))
-                events = self.parser.parse(message_type, str(message))
+                logger.debug("Message received. Type: %i Message: %s" %(message_type, message))
+                events = self.parser.parse(message_type, message)
+                logger.debug('Returned events: %s' % str(events))
                 if events != neb_parser.NOT_IMPLEMENTED and events != neb_parser.BAD_FORMAT:
                     for event in events:
                         if event != neb_parser.NOT_IMPLEMENTED and event != neb_parser.BAD_FORMAT:
