@@ -1,4 +1,6 @@
 
+mkdir -p /var/run/nagios
+chmod -R nagios:nagios /var/run/nagios
 
 cd ../neb2ipc/scripts
 ./install.sh

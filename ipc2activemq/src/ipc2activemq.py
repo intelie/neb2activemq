@@ -9,7 +9,7 @@ from nebpublisher.utils.misc import run_as_daemon
 import cProfile
 
 PIDFILE = os.path.join(os.path.abspath(os.path.dirname(__file__)), '/usr/local/nagios/var/nebpublisher.pid')
-DAEMON = False
+DAEMON = True 
 PROFILE = False
 ENV = "prod"
 
@@ -60,7 +60,7 @@ if __name__ == "__main__":
                       type="string")
     options, remainder = parser.parse_args()
 
-    DAEMON = not options.nodaemon
+    DAEMON = True True not options.nodaemon
     PIDFILE = options.pidfile
     PROFILE = options.profile
     ENV = options.env
