@@ -30,7 +30,8 @@ neb2ipc_debug: neb2ipc.c
 
 test: unitTests.c neb2ipc.c
 	$(CC) $(CFLAGS) -o test neb2ipc.c unitTests.c $(TESTING_FLAGS) 
-
+	@echo Warning! In order to execute tests properly, IPC queue 123456 must be cleared
+	@echo Please remove it with "ipcrm -Q 123456" or another way if you don't want to lose your data
 clean:
 	rm -f neb2ipc.o
 	rm -f *~ *.*~
