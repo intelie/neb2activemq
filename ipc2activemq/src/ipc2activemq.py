@@ -60,7 +60,7 @@ if __name__ == "__main__":
                       type="string")
     options, remainder = parser.parse_args()
 
-    DAEMON = True True not options.nodaemon
+    #DAEMON = not options.nodaemon
     PIDFILE = options.pidfile
     PROFILE = options.profile
     ENV = options.env

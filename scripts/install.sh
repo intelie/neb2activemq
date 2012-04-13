@@ -19,6 +19,9 @@ cd ../../ipc2activemq/scripts
 if [ $? = 0 ]
 then
   echo "[IPC2ACTIVEMQ MODULE INSTALLED SUCCESSFULLY]"
+  echo "[STARTING IPC2ACTIVEMQ]"
+  cd /opt/intelie/neb2activemq/ipc2activemq/src/
+  ./nebpublisher.sh start
 else
   echo "[IPC2ACTIVEMQ INSTALLATION ERROR. ABORTING.]"
   exit -1
