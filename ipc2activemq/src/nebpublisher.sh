@@ -20,28 +20,28 @@ startdaemon(){
     if [ -f $PIDFILE ]; then
         OWNER=`ls -l $PIDFILE | tr " " ":" | cut -d":" -f3`
         if [ $OWNER != "nagios" ]; then
-            echo "\n$PIDFILE isn't owned by nagios user\n"         
+            echo -e "\n$PIDFILE isn't owned by nagios user\n"         
             return
         fi 
     fi
     if(test -f $PIDFILE && ps -p `cat $PIDFILE` > /dev/null); then
-        echo "Daemon is running: $PIDFILE \n" 
+        echo -e "Daemon is running: $PIDFILE \n" 
     else
-        echo "Starting $DESC: $DAEMON \n"
+        echo -e "Starting $DESC: $DAEMON \n"
         sudo -u nagios python2.6 $DAEMON --pidfile=$PIDFILE --env=$ENV
     fi
 }
 
 stopdaemon(){
-  echo -n "Stoping $DESC: \n"
+  echo -e "Stoping $DESC: \n"
   if(test -f $PIDFILE) then
     pid=`head -1 $PIDFILE`  
-    echo "\t stoping $pid \n"
+    echo -e "\t stoping $pid \n"
     sudo -u nagios kill $pid
     sudo -u nagios rm $PIDFILE
   else
-    echo "Pid file not found: $PIDFILE \n"
-    echo "Try force-stop to kill all process \n"
+    echo -e "Pid file not found: $PIDFILE \n"
+    echo -e "Try force-stop to kill all process \n"
   fi
 }
 
@@ -66,7 +66,7 @@ case "$1" in
     startdaemon
   ;;
   force-stop)
-    echo -n "Force stopping $DESC \n"
+    echo -e "Force stopping $DESC \n"
     forcestop
     if(test -f $PIDFILE) then
       rm $PIDFILE
