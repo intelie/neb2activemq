@@ -249,18 +249,6 @@ expressions = {
         }
     ],
 
-
-    'check_local_users': [
-        {'labelFilter': 'USERS',
-         'eventtype': 'USERS',
-         'regexps': [
-            {'properties': ['state', 'logged_users'],
-             'regexp': r'USERS (OK|WARNING|CRITICAL) - (\d+) .*'
-            }
-         ]
-        }
-    ],
-
     'check_ssh': [
         {'labelFilter': 'SSH',
          'eventtype': 'SSH',
