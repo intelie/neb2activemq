@@ -24,7 +24,7 @@ expressions = {
          'eventtype': 'TCP',
          'regexps': [
             {'properties': ['state', 'response_time', 'port'],
-             'regexp': r"TCP (OK|WARNING|CRITICAL) - (\d+.\d+) second response time on port (\d+)"
+             'regexp': r"TCP (OK|WARNING|CRITICAL) - (\d+\.?\d*) seconds? response time on port (\d+)"
             },
             {'properties': ['state'],
              'regexp': r"TCP (OK|WARNING|CRITICAL) - Invalid"
