@@ -189,11 +189,32 @@ expressions = {
          'eventtype': 'Disk',
          'regexps': [
             {'properties': ['state', 'free_space' , 'usage'],
-             'regexp': r'DISK (OK|WARNING|CRITICAL)()()'
+             'regexp': r'Disk space (OK|WARNING|CRITICAL) - (\d+) kB free \( (\w+) % used\) .*'
             }
          ]
         }
     ],
+
+    'check_http': [
+        {'labelFilter': None,
+         'eventtype': 'HTTP',
+         'regexps': [
+            {'properties': ['state', 'status' , 'bytes_returned', 'response_time'],
+             'regexp': r'HTTP (OK|WARNING): HTTP\/1.1 (\d{3}) .* - (\d+) bytes in (\d+\.\d+).*'
+            }
+         ]
+        },
+	{'labelfilter': None,
+	 'eventtype': 'HTTP',
+	 'regexps' : [
+	   {'properties': ['state']
+	    'regexp': r'(CRITICAL) - Socket timeout after 10 seconds'
+	   }
+	]
+      }
+    ],
+
+
 
     'check_drbd': [
         {'labelFilter': 'DRBD',
@@ -205,6 +226,65 @@ expressions = {
          ]
         }
     ],
+
+    'check_local_swap': [
+        {'labelFilter': 'SWAP',
+         'eventtype': 'SWAP',
+         'regexps': [
+            {'properties': ['state', 'free_memory'],
+             'regexp': r'SWAP (OK|WARNING|CRITICAL) - (\d+)% free .*'
+            }
+         ]
+        }
+    ],
+
+    'check_local_users': [
+        {'labelFilter': 'USERS',
+         'eventtype': 'USERS',
+         'regexps': [
+            {'properties': ['state', 'users'],
+             'regexp': r'USERS (OK|WARNING|CRITICAL) - (\d+) .*'
+            }
+         ]
+        }
+    ],
+
+
+    'check_local_users': [
+        {'labelFilter': 'USERS',
+         'eventtype': 'USERS',
+         'regexps': [
+            {'properties': ['state', 'logged_users'],
+             'regexp': r'USERS (OK|WARNING|CRITICAL) - (\d+) .*'
+            }
+         ]
+        }
+    ],
+
+    'check_ssh': [
+        {'labelFilter': 'SSH',
+         'eventtype': 'SSH',
+         'regexps': [
+            {'properties': ['state'],
+             'regexp': r'SSH (OK|WARNING|CRITICAL) .*'
+            }
+         ]
+        }
+    ],
+
+
+    'check_smtp': [
+        {'labelFilter': 'SMTP',
+         'eventtype': 'SMTP'
+         'regexps': [
+            {'properties': ['state', 'response_time'],
+             'regexp': r'SMTP (OK|WARNING|CRITICAL) - (\d+\.\d+) .*'
+            }
+         ]
+        }
+    ],
+
+
 
     'check_heartbeat': [
         {'labelFilter': None,
@@ -288,17 +368,6 @@ expressions = {
     ],
 
     'check_nrpe': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_local_users': [
         {'labelFilter': None,
          'eventtype': '',
          'regexps': [
