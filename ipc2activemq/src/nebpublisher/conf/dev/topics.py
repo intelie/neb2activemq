@@ -207,7 +207,7 @@ expressions = {
 	{'labelfilter': None,
 	 'eventtype': 'HTTP',
 	 'regexps' : [
-	   {'properties': ['state']
+	   {'properties': ['state'],
 	    'regexp': r'(CRITICAL) - Socket timeout after 10 seconds'
 	   }
 	]
@@ -260,10 +260,9 @@ expressions = {
         }
     ],
 
-
     'check_smtp': [
         {'labelFilter': 'SMTP',
-         'eventtype': 'SMTP'
+         'eventtype': 'SMTP',
          'regexps': [
             {'properties': ['state', 'response_time'],
              'regexp': r'SMTP (OK|WARNING|CRITICAL) - (\d+\.\d+) .*'
@@ -271,7 +270,6 @@ expressions = {
          ]
         }
     ],
-
 
 
     'check_heartbeat': [
