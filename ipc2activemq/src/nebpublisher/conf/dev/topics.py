@@ -1,3 +1,7 @@
+# how to define regexps
+
+
+
 # Do we need these error regexps?
 errorRegexps = [
     {'properties' : ['description'],
@@ -24,7 +28,7 @@ expressions = {
          'eventtype': 'TCP',
          'regexps': [
             {'properties': ['state', 'response_time', 'port'],
-             'regexp': r"TCP (OK|WARNING|CRITICAL) - (\d+\.?\d*) seconds? response time on port (\d+)"
+             'regexp': r"TCP (OK|WARNING|CRITICAL) - ([0-9.]+) seconds? response time on port (\d+)"
             },
             {'properties': ['state'],
              'regexp': r"TCP (OK|WARNING|CRITICAL) - Invalid"
@@ -83,7 +87,7 @@ expressions = {
          'eventtype': 'PING',
          'regexps': [
             {'properties': ['state', 'ip', 'loss', 'rta'],
-             'regexp': r"FPING (OK|WARNING|CRITICAL) - ([0-9.]+) \(loss=(\d+)%(?:(?:, rta=(\d+\.\d*) ms\))|())"
+             'regexp': r"FPING (OK|WARNING|CRITICAL) - ([0-9.]+) \(loss=(\d+)%(?:(?:, rta=([0-9.]+) ms\))|())"
             }
          ]
         }
@@ -200,7 +204,7 @@ expressions = {
          'eventtype': 'HTTP',
          'regexps': [
             {'properties': ['state', 'status' , 'bytes_returned', 'response_time'],
-             'regexp': r'HTTP (OK|WARNING): HTTP\/1.1 (\d{3}) .* - (\d+) bytes in (\d+\.\d+).*'
+             'regexp': r'HTTP (OK|WARNING): HTTP\/1.1 (\d{3}) .* - (\d+) bytes in ([0-9.]+).*'
             }
          ]
         },
@@ -265,7 +269,7 @@ expressions = {
          'eventtype': 'SMTP',
          'regexps': [
             {'properties': ['state', 'response_time'],
-             'regexp': r'SMTP (OK|WARNING|CRITICAL) - (\d+\.\d+) .*'
+             'regexp': r'SMTP (OK|WARNING|CRITICAL) - ([0-9.]+) .*'
             }
          ]
         }
