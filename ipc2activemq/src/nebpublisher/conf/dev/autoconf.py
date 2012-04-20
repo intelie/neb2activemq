@@ -1,34 +1,34 @@
 import topics
 import re
 
-def check_known_properties(properties)
-    
-    #is this really necessary?
-  for i in range(len(properties)):
-    
-
-def parse_unknown_properties(properties, regexp):
+def parse_regexps(properties, regexp):
   
   final_list = list()
+  final_list.append(("host", "STRING", "IDENTIFIER"))
+  final_list.append(("downtime", "INT", "VALUE"))
 
   #regexp to capture everything that's surrounded by parenthesis
   group = re.compile('(\(.+?\))')
   matched_groups = group.findall(regexp)
-  
-  for i in range(len(matched_groups)):
-    if matched_groups[i].find('OK') or matched_groups[i].find('WARNING') or
-    matched_groups[i].find('CRITICAL'):
+  for i, value in enumerate(matched_groups):
+    if 'OK' in value or "WARNING" in value or "CRITICAL" in value:
       final_list.append((properties[i], "STRING", "VALUE"))
       continue
-    if matched_groups[i].find('.+'):
+    if '.+' in value:
       final_list.append((properties[i], "STRING", "VALUE"))
       continue
-    if matched_groups[i].find('\d+'):
-      final_list.append((properties[i], "INT", "VALUE"))
-      continue
-    if matched_groups[i].find('[\d.]+'):
+    if '[\d.]+' in value:
       final_list.append((properties[i], "FLOAT", "VAlUE"))
       continue
+    if '\d' in value:
+      final_list.append((properties[i], "INT", "VALUE"))
+      continue
+  return final_list
 
-def write_file(structure):
-
+def write_file(final_list, filename):
+  
+  file = open(filename + '.py', 'w')
+  string = "PROPERTIES = %s" % final_list
+  print >> file, string
+  file.close()
+  

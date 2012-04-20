@@ -82,16 +82,16 @@ expressions = {
     ],
 
 
-    'conn': [ #conn = check_fping
-        {'labelFilter': 'FPING',
-         'eventtype': 'PING',
-         'regexps': [
-            {'properties': ['state', 'ip', 'loss', 'rta'],
-             'regexp': r"FPING (OK|WARNING|CRITICAL) - ([\d.]+) \(loss=(\d+)%(?:(?:, rta=([\d.]+) ms\))|())"
-            }
-         ]
-        }
-    ],
+#    'conn': [ #conn = check_fping
+#        {'labelFilter': 'FPING',
+#         'eventtype': 'PING',
+#         'regexps': [
+#            {'properties': ['state', 'ip', 'loss', 'rta'],
+#             'regexp': r"FPING (OK|WARNING|CRITICAL) - ([\d.]+) \(loss=(\d+)%(?:(?:, rta=([\d.]+) ms\))|\(\))"
+#            }
+#         ]
+#        }
+#    ],
 
     'check_ping': [
         {'labelFilter': 'PING',
@@ -298,9 +298,9 @@ expressions = {
         }
     ],
 
-
+}
     ### STOPPED HERE ###
-    '''
+'''
 
     'check_propel_pwas450': [
         {'labelFilter': None,
@@ -587,8 +587,7 @@ expressions = {
          ]
         }
     ],
-    ''': []
-}
+    '''
 
 expressions['tcp'] = expressions['check_tcp']
 
