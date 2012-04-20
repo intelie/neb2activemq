@@ -8,3 +8,6 @@ def main():
   for i in range(len(keys_list)):
     final_list = autoconf.parse_regexps(topics.expressions[keys_list[i]][0]['regexps'][0]['properties'], topics.expressions[keys_list[i]][0]['regexps'][0]['regexp'])
     autoconf.write_file(final_list, keys_list[i])
+
+if __name__ == "__main__":
+    main()

@@ -1,15 +1,27 @@
 import topics
 import re
+import sys
 
 def parse_regexps(properties, regexp):
-  
   final_list = list()
   final_list.append(("host", "STRING", "IDENTIFIER"))
   final_list.append(("downtime", "INT", "VALUE"))
 
   #regexp to capture everything that's surrounded by parenthesis
-  group = re.compile('(\(.+?\))')
-  matched_groups = group.findall(regexp)
+  group_regex = re.compile(r'((?<!\\)\(.+?\))')
+  matched_groups = group_regex.findall(regexp)
+
+  if len(matched_groups) != len(properties):
+      print "Different number of properties"
+      print "Aborting..."
+      sys.exit(-1)
+
+  if len(matched_groups) != len(properties):
+      print len(matched_groups)
+      print len(properties)
+      print "# of groups is not equal to # of properties for regexp: %s" % regexp
+      print "Aborting..."
+      sys.exit(-1)
   for i, value in enumerate(matched_groups):
     if 'OK' in value or "WARNING" in value or "CRITICAL" in value:
       final_list.append((properties[i], "STRING", "VALUE"))
@@ -27,7 +39,7 @@ def parse_regexps(properties, regexp):
 
 def write_file(final_list, filename):
   
-  file = open(filename + '.py', 'w')
+  file = open('files/' + filename + '.py', 'w')
   string = "PROPERTIES = %s" % final_list
   print >> file, string
   file.close()
