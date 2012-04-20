@@ -28,7 +28,7 @@ expressions = {
          'eventtype': 'TCP',
          'regexps': [
             {'properties': ['state', 'response_time', 'port'],
-             'regexp': r"TCP (OK|WARNING|CRITICAL) - ([0-9.]+) seconds? response time on port (\d+)"
+             'regexp': r"TCP (OK|WARNING|CRITICAL) - ([\d.]+) seconds? response time on port (\d+)"
             },
             {'properties': ['state'],
              'regexp': r"TCP (OK|WARNING|CRITICAL) - Invalid"
@@ -50,7 +50,7 @@ expressions = {
          'eventtype': 'Load',
          'regexps': [
             {'properties': ['state', 'min1', 'min5', 'min15'],
-             'regexp': r"(OK|WARNING|CRITICAL) - load average: ([0-9.]+), ([0-9.]+), ([0-9.]+)"
+             'regexp': r"(OK|WARNING|CRITICAL) - load average: ([\d.]+), ([\d.]+), ([\d.]+)"
             }
          ]
         }
@@ -61,7 +61,7 @@ expressions = {
          'eventtype': 'CPU',
          'regexps': [
             {'properties': ['state', 'min1', 'min5', 'min15'],
-             'regexp': r"(OK|WARNING|CRITICAL) - load average: ([0-9.]+), ([0-9.]+), ([0-9.]+)"
+             'regexp': r"(OK|WARNING|CRITICAL) - load average: ([\d.]+), ([\d.]+), ([\d.]+)"
             },
             {'properties': ['state', 'percentual', 'type'],
              'regexp': r"(OK|WARNING|CRITICAL) - CPU em (\d+)%, tipo: (.+)"
@@ -87,7 +87,7 @@ expressions = {
          'eventtype': 'PING',
          'regexps': [
             {'properties': ['state', 'ip', 'loss', 'rta'],
-             'regexp': r"FPING (OK|WARNING|CRITICAL) - ([0-9.]+) \(loss=(\d+)%(?:(?:, rta=([0-9.]+) ms\))|())"
+             'regexp': r"FPING (OK|WARNING|CRITICAL) - ([\d.]+) \(loss=(\d+)%(?:(?:, rta=([\d.]+) ms\))|())"
             }
          ]
         }
@@ -98,7 +98,7 @@ expressions = {
          'eventtype': 'PING',
          'regexps': [
             {'properties': ['state', 'loss', 'rta'],
-             'regexp': r"PING (OK|WARNING|CRITICAL) - Packet loss = ([0-9.]+)%, RTA = ([0-9.]+) ms"
+             'regexp': r"PING (OK|WARNING|CRITICAL) - Packet loss = ([\d.]+)%, RTA = ([\d.]+) ms"
             }
          ]
         }
@@ -109,7 +109,7 @@ expressions = {
          'eventtype': 'DNS',
          'regexps': [
             {'properties': ['state', 'response_time', 'dns_record', 'ip'],
-             'regexp': r'DNS (OK|WARNING|CRITICAL): ([0-9.]+) seconds? response time. ([^ ]+) returns ([0-9.]+)'
+             'regexp': r'DNS (OK|WARNING|CRITICAL): ([\d.]+) seconds? response time. ([^ ]+) returns ([\d.]+)'
             }
          ]
         }
@@ -120,7 +120,7 @@ expressions = {
          'eventtype': 'FTP',
          'regexps': [
             {'properties': ['state', 'response_time', 'port'],
-             'regexp': r'FTP (OK|WARNING|CRITICAL) - ([0-9.]+) seconds? response time on port ([0-9]+)'
+             'regexp': r'FTP (OK|WARNING|CRITICAL) - ([\d.]+) seconds? response time on port ([\d]+)'
             },
          ]
 
@@ -132,7 +132,7 @@ expressions = {
          'eventtype': 'Procs',
          'regexps': [
             {'properties': ['state', 'number_of_processes', 'args'],
-             'regexp': r'(OK|WARNING|CRITICAL) - ([0-9]+) processes running with args (.+)'
+             'regexp': r'(OK|WARNING|CRITICAL) - ([\d]+) processes running with args (.+)'
             }
          ]
 
@@ -144,7 +144,7 @@ expressions = {
          'eventtype': 'Procs',
          'regexps': [
             {'properties': ['state', 'number_of_processes', 'state_of_process'],
-             'regexp': r'PROCS (OK|WARNING|CRITICAL): ([0-9]+) processes with STATE = (.+)'
+             'regexp': r'PROCS (OK|WARNING|CRITICAL): ([\d]+) processes with STATE = (.+)'
             }
          ]
         }
@@ -166,7 +166,7 @@ expressions = {
          'eventtype': 'HTTP',
          'regexps': [
             {'properties': ['url', 'state', 'http_version', 'status_code', 'status_description', 'bytes', 'response_time'],
-             'regexp': r'<A HREF="([^"]+)" target="_blank">HTTP (.+): HTTP/([0-9.]+) ([0-9]+) (.+) - ([0-9]+) bytes in ([0-9.]+) second response time </A>'
+             'regexp': r'<A HREF="([^"]+)" target="_blank">HTTP (.+): HTTP/([\d.]+) ([\d]+) (.+) - ([\d]+) bytes in ([\d.]+) second response time </A>'
             }
          ]
         },
@@ -204,7 +204,7 @@ expressions = {
          'eventtype': 'HTTP',
          'regexps': [
             {'properties': ['state', 'status' , 'bytes_returned', 'response_time'],
-             'regexp': r'HTTP (OK|WARNING): HTTP\/1.1 (\d{3}) .* - (\d+) bytes in ([0-9.]+).*'
+             'regexp': r'HTTP (OK|WARNING): HTTP\/1.1 (\d{3}) .* - (\d+) bytes in ([\d.]+).*'
             }
          ]
         },
@@ -269,7 +269,7 @@ expressions = {
          'eventtype': 'SMTP',
          'regexps': [
             {'properties': ['state', 'response_time'],
-             'regexp': r'SMTP (OK|WARNING|CRITICAL) - ([0-9.]+) .*'
+             'regexp': r'SMTP (OK|WARNING|CRITICAL) - ([\d.]+) .*'
             }
          ]
         }
@@ -292,7 +292,7 @@ expressions = {
          'eventtype': 'MYSQL',
          'regexps': [
             {'properties': ['uptime', 'threads', 'questions', 'slow_queries', 'opens', 'flush_tables', 'open_tables', 'average_queries_per_second'],
-             'regexp': r'Uptime: ([0-9]+)  Threads: ([0-9]+)  Questions: ([0-9]+)  Slow queries: ([0-9]+)  Opens: ([0-9]+)  Flush tables: ([0-9]+)  Open tables: ([0-9]+)  Queries per second avg: ([0-9.]+)'
+             'regexp': r'Uptime: ([\d]+)  Threads: ([\d]+)  Questions: ([\d]+)  Slow queries: ([\d]+)  Opens: ([\d]+)  Flush tables: ([\d]+)  Open tables: ([\d]+)  Queries per second avg: ([\d.]+)'
             }
          ]
         }

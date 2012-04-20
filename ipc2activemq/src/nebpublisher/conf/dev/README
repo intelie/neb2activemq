@@ -1,0 +1,5 @@
+dns: há uma regexp "[^ ]+"..
+check_many_procs - - - [^\(]+
+http_args_follow - - - [^"]
+check_disk - - - - - \w+
+check_local_swap - - - [^:]+
