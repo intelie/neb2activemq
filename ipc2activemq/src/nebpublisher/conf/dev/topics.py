@@ -56,6 +56,7 @@ expressions = {
          'regexps': [
             {'properties': ['state', 'user' , 'system', 'idle'], # ordenated!
              'regexp': r"CPU usage \(%user %system %idle\) (OK|WARNING|CRITICAL) - (\d+) (\d+) \*?(\d+)\*?"
+	    },
             {'properties': ['state', 'min1', 'min5', 'min15'],
              'regexp': r"(OK|WARNING|CRITICAL) - load average: ([\d.]+), ([\d.]+), ([\d.]+)"
             },
@@ -190,7 +191,7 @@ expressions = {
          'regexps': [
             {'properties': ['state', 'free_space' , 'usage'],
              'regexp': r"Disk space (OK|WARNING|CRITICAL) - (\d+) kB free \( \*?(\d+)\*? % used\)"
-             'regexp': r'Disk space (OK|WARNING|CRITICAL) - (\d+) kB free \( (\w+) % used\) .*'
+             #'regexp': r'Disk space (OK|WARNING|CRITICAL) - (\d+) kB free \( (\w+) % used\) .*'
             }
          ]
         }
