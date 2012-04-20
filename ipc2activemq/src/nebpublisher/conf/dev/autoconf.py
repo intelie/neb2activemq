@@ -16,12 +16,6 @@ def parse_regexps(properties, regexp):
       print "Aborting..."
       sys.exit(-1)
 
-  if len(matched_groups) != len(properties):
-      print len(matched_groups)
-      print len(properties)
-      print "# of groups is not equal to # of properties for regexp: %s" % regexp
-      print "Aborting..."
-      sys.exit(-1)
   for i, value in enumerate(matched_groups):
     if 'OK' in value or "WARNING" in value or "CRITICAL" in value:
       final_list.append((properties[i], "STRING", "VALUE"))
@@ -30,7 +24,7 @@ def parse_regexps(properties, regexp):
       final_list.append((properties[i], "STRING", "VALUE"))
       continue
     if '[\d.]+' in value:
-      final_list.append((properties[i], "FLOAT", "VAlUE"))
+      final_list.append((properties[i], "FLOAT", "VALUE"))
       continue
     if '\d' in value:
       final_list.append((properties[i], "INT", "VALUE"))
