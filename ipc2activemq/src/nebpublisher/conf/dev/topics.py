@@ -1235,6 +1235,63 @@ expressions = {
         }
     ],
 
+    'check_certificado': [
+        {'labelFilter': None,
+         'eventtype': 'Certificate',
+         'regexps': [
+            {'properties': ['state', 'timestamp'],
+             'regexp': r'(OK|WARNING) - Certificate will expire on (.+)'
+            },
+	    {'properties': [],
+	     'regexp': r'CRITICAL - Socket timeout after 10 seconds'
+ 	    }
+         ] 
+        }
+    ],
+
+    'check_CurrentAnonymousUsers': [
+        {'labelFilter': None,
+         'eventtype': 'IIS_Users',
+         'regexps': [
+            {'properties': ['number_anonymous_users'],
+             'regexp': r'CurrentAnonymousUsers=(\d+)'
+            },
+            {'properties': [],
+             'regexp': r'CHECK_NRPE: Socket timeout after 10 seconds.'
+	    }
+         ]
+        }
+    ],
+
+
+    'check_CurrentConnections': [
+        {'labelFilter': None,
+         'eventtype': 'IIS_Connections',
+         'regexps': [
+            {'properties': ['number_connections'],
+             'regexp': r'CurrentConnections=(\d+)'
+            },
+            {'properties': [],
+             'regexp': r'CHECK_NRPE: Socket timeout after 10 seconds.'
+	    }
+         ]
+        }
+    ],
+
+    'check_https': [
+        {'labelFilter': None,
+         'eventtype': 'HTTPS',
+         'regexps': [
+            {'properties': ['state', 'status', 'bytes', 'response_time'],
+             'regexp': r'HTTP (OK|WARNING): HTTP\/1.1 (\d+) OK - (\d+) bytes in ([0-9.]+) seconds? response time'
+            },
+            {'properties': [],
+             'regexp': r'CRITICAL - Socket timeout after 10 seconds'
+	    }
+         ]
+        }
+    ],
+
 
 
     ### STOPPED HERE ###
