@@ -92,7 +92,7 @@ expressions = {
 			      {'properties': ['state', 'response_time', 'port'],
 			       'regexp': r'FTP (OK|WARNING|CRITICAL) - ([\d.]+) seconds* response time on port (\d+) .+'
 			      },
-			      {'properties': ['state', 'free_space', 'percentage_free_space', 'free_inode_percentage'],
+			      {'properties': ['state', 'path','free_space','percentage_free_space', 'free_inode_percentage'],
 			       'regexp': r'DISK (OK|WARNING|CRITICAL) - free space: (.+) (\d+) MB \((\d+)% inode=(\d+)%\)'
 			      },
 			      {'properties': ['state', 'packages_to_upgrade', 'critical_updates'],
@@ -1055,6 +1055,18 @@ expressions = {
             {'properties': ['day', 'hour', 'minute'],
              'regexp': r'System Uptime - (\d+) day\(s\) (\d+) hour\(s\) (\d+) minute\(s\)'
             },
+	    {'properties': [],
+	     'regexp': r'CTFclient: Started'
+	    },
+	    {'properties': [],
+	     'regexp': r'CTFConectorCtrl.exe: Running'
+	    },
+	    {'properties': [],
+	     'regexp': r'IISADMIN: Started'
+	    },
+	    {'properties': [],
+	     'regexp': r'inetinfo.exe: Running'
+	    }
          ]
         }
     ],
@@ -1287,6 +1299,21 @@ expressions = {
             },
             {'properties': [],
              'regexp': r'CRITICAL - Socket timeout after 10 seconds'
+	    }
+         ]
+        }
+    ],
+
+
+    'check_local_disk': [
+        {'labelFilter': None,
+         'eventtype': 'DISK',
+         'regexps': [
+	    {'properties': ['state', 'path', 'free_space','percentage_free_space', 'free_inode_percentage'],
+             'regexp': r'DISK (OK|WARNING|CRITICAL) - free space: (.+) (\d+) MB \((\d+)% inode=(\d+)%\)'
+            },
+	    {'properties': ['state', 'path', 'free_space', 'percentage_free_space', 'free_inode_percentage', 'path', 'free_space', 'percentage_free_space', 'free_inode_percentage'],
+	     'regexp': r'DISK (OK|WARNING|CRITICAL) - free space: (.+) (\d+) MB \((\d+)% inode=(\d+)%\): (.+) (\d+) MB \((\d+)% inode=(\d+)%\):'
 	    }
          ]
         }
