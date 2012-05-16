@@ -572,16 +572,17 @@ expressions = {
     ],
 
 
- 'check_storage_snmp': [
-     {'eventtype': 'Type',
-                         'labelFilter': None,
-                         'regexps': [{'properties': ['state'],
-                                      'regexp': '(OK|WARNING|CRITICAL)'
-            			     },
-				     {'properties': ['state', 'file_1'],
-				      'regexp': '(OK|WARNING|CRITICAL): ([^, ]+)+'
-				     }
-         			    ]
+    'check_storage_snmp': [
+        {'eventtype': 'Type',
+         'labelFilter': None,
+         'regexps': [
+            {'properties': ['state'],
+             'regexp': '(OK|WARNING|CRITICAL)'
+            },
+			{'properties': ['state', 'file_1'],
+			 'regexp': '(OK|WARNING|CRITICAL): ([^, ]+)+'
+			}
+         ]
         }
     ],
 
@@ -675,9 +676,10 @@ expressions = {
          'labelFilter': None,
          'regexps': [
             {'properties': ['state', 'time'],
-             'regexp': r'WebInject (OK|WARNING|CRITICAL) - All tests passed successfully in ([0-9.]+) seconds.*'},
-                                     {'properties': ['state', 'timeout'],
-                                      'regexp': r'WebInject (OK|WARNING|CRITICAL) - All tests passed successfully but global timeout \(([0-9]+) seconds\) has been reached'
+             'regexp': r'WebInject (OK|WARNING|CRITICAL) - All tests passed successfully in ([0-9.]+) seconds.*'
+            },
+            {'properties': ['state', 'timeout'],
+             'regexp': r'WebInject (OK|WARNING|CRITICAL) - All tests passed successfully but global timeout \(([0-9]+) seconds\) has been reached'
             }
          ]
         }
@@ -826,19 +828,8 @@ expressions = {
             {'properties': ['state'],
              'regexp': r"TCP (OK|WARNING|CRITICAL) - Invalid"
             },
-            {'properties': [],
-             'regexp': r"No route to host"
-            }
          ]
         },
-        {'labelFilter': None,
-         'eventtype': 'TCP',
-         'regexps': [
-            {'properties': ['state'],
-             'regexp': r"(WARNING|CRITICAL) - Socket timeout"
-            }
-         ]
-        }
     ],
 
     #changed
@@ -992,23 +983,13 @@ expressions = {
          'regexps': [
             {'properties': ['url', 'state', 'http_version', 'status_code', 'status_description', 'bytes', 'response_time'],
              'regexp': r'<A HREF="([^"]+)" target="_blank">HTTP (.+): HTTP/([0-9.]+) ([0-9]+) (.+) - ([0-9]+) bytes in ([0-9.]+) second response time </A>'
-            }
-         ]
-        },
-        {'labelFilter': None,
-         'eventtype': 'HTTP',
-         'regexps': [
+            },
             {'properties': ['url', 'state', 'status_description'],
              'regexp': r'<A HREF="([^"]+)" target="_blank">HTTP (.+) - (.+)'
-            }
-         ]
-        },
-        {'labelFilter': None,
-         'eventtype': 'HTTP',
-         'regexps': [
+            },
             {'properties': ['url', 'status_description'],
              'regexp': r'<A HREF="([^"]+)" target="_blank">(Connection refused)'
-            }
+            },
          ]
         },
     ],
@@ -1083,18 +1064,6 @@ expressions = {
             {'properties': ['service','status'],
              'regexp': r"(W3SVC|WCFMsmqServer.exe|inetinfo.exe|IISADMIN|CTF[Cc]onectorCtrl.exe|CTFclient): (Started|Running|Stopped|not running)"
             },
-	    {'properties': [],
-	     'regexp': r'CTFclient: Started'
-	    },
-	    {'properties': [],
-	     'regexp': r'CTFConectorCtrl.exe: Running'
-	    },
-	    {'properties': [],
-	     'regexp': r'IISADMIN: Started'
-	    },
-	    {'properties': [],
-	     'regexp': r'inetinfo.exe: Running'
-	    }
          ]
         }
     ],
@@ -1318,21 +1287,6 @@ expressions = {
         }
     ],
 
-
-    'check_local_disk': [
-        {'labelFilter': None,
-         'eventtype': 'DISK',
-         'regexps': [
-	    {'properties': ['state', 'path', 'free_space','percentage_free_space', 'free_inode_percentage'],
-             'regexp': r'DISK (OK|WARNING|CRITICAL) - free space: (.+) (\d+) MB \((\d+)% inode=(\d+)%\)'
-            },
-	    {'properties': ['state', 'path', 'free_space', 'percentage_free_space', 'free_inode_percentage', 'path', 'free_space', 'percentage_free_space', 'free_inode_percentage'],
-	     'regexp': r'DISK (OK|WARNING|CRITICAL) - free space: (.+) (\d+) MB \((\d+)% inode=(\d+)%\): (.+) (\d+) MB \((\d+)% inode=(\d+)%\):'
-	    }
-         ]
-        }
-    ],
-
     'check_msmq': [
         {'labelFilter': None,
          'eventtype': 'MSMQ',
@@ -1389,6 +1343,12 @@ errorRegexps = [
     {'properties': ['state', 'msg_source', 'unachievable_host_add'],
      'regexp': r'(ERROR): (.+) : No response from remote host "([\d.]+)"\.'
     },
+    {'properties': ['description'],
+     'regexp': r"(No route to host)"
+    },
+    {'properties': ['state','description'],
+     'regexp': r"(WARNING|CRITICAL) - (Socket timeout)"
+    }
 ]
 
 expressions['tcp'] = expressions['check_tcp']
