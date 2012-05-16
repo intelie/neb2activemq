@@ -1062,7 +1062,10 @@ expressions = {
              'regexp': r"NSClient - ERROR: Failed to get PDH value."
             },
             {'properties': ['service','status'],
-             'regexp': r"(W3SVC|WCFMsmqServer.exe|inetinfo.exe|IISADMIN|CTF[Cc]onectorCtrl.exe|CTFclient): (Started|Running|Stopped|not running)"
+             'regexp': r"([\S]+): (Started|Running|Stopped|not running)"
+            },
+            {'properties': ['state'],
+             'regexp': r"(OK): All processes are running."
             },
          ]
         }
