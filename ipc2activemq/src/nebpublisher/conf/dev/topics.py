@@ -64,6 +64,16 @@ expressions = {
         }
     ],
 
+    'check_uptime': [
+        {'eventtype': 'Uptime',
+         'labelFilter': None,
+         'regexps': [
+            {'properties': ['day', 'hour', 'minute'],
+             'regexp': r'System Uptime - (\d+) day\(s\) (\d+) hour\(s\) (\d+) minute\(s\)'
+            },
+         ]
+        }
+    ],
 
     'check_dns_recursive': [
         {'eventtype': 'DNSRecursive',
@@ -471,6 +481,9 @@ expressions = {
          'regexps': [
             {'properties': ['state', 'response_time'],
              'regexp': r'SMTP (OK|WARNING|CRITICAL) - ([0-9.]+) sec. response time'
+            },
+            {'properties': [],
+             'regexp': r'Service Check Timed Out'
             }
          ]
         }
@@ -649,8 +662,11 @@ expressions = {
             {'properties': ['state', 'timeout'],
              'regexp': r'WebInject (OK|WARNING|CRITICAL) - All tests passed successfully but global timeout \(([0-9]+) seconds\) has been reached'
             },
-            {'properties': ['state', 'failed'],
-             'regexp': r'WebInject (OK|WARNING|CRITICAL) - Test case number \d+ failed'
+            {'properties': ['state', 'failed_test_num'],
+             'regexp': r'WebInject (OK|WARNING|CRITICAL) - Test case number (\d+) failed'
+            },
+            {'properties': [],
+             'regexp': r'No output returned from plugin'
             },
          ]
         }
@@ -727,6 +743,9 @@ expressions = {
             {'properties': ['state', 'free_percent'],
              'regexp': r'Memory (OK|WARNING|CRITICAL) - ([0-9.]+)% .*'
             },
+            {'properties': ['total', 'total_unit', 'used', 'used_unit', 'used_percentage', 'free', 'free_unit', 'free_percentage'],
+             'regexp': r'Memory usage: total:([0-9.]+) (\w{2}) - used: ([0-9.]+) (\w{2}) \(([0-9]+)%\) - free: ([0-9.]+) (\w{2}) \(([0-9]+)%\)'
+            },
          ],
         },
     ],
@@ -764,7 +783,7 @@ expressions = {
             },
             {'properties': ['state', 'used_percent'],
              'regexp': r'(OK|WARNING|CRITICAL): Swap used: ([0-9]+)% .*'
-            },
+            },         
          ],
         },
     ],
@@ -864,6 +883,9 @@ expressions = {
             },
             {'properties': ['state', 'percentual', 'type'],
              'regexp': r"(OK|WARNING|CRITICAL) - CPU em (\d+)%, tipo: (.+)"
+            },
+            {'properties': ['load', 'time', 'resolution'],
+             'regexp': r'CPU Load (\d+)% \((\d+) (\w+) average\)'
             },
          ]
         }
@@ -1001,7 +1023,16 @@ expressions = {
          'regexps': [
             {'properties': ['state', 'free_space' , 'usage'],
              'regexp': r'Disk space (OK|WARNING|CRITICAL) - (\d+) kB free \( (\w+) % used\) .*'
-            }
+            },
+            {'properties': ['total', 'total_unit', 'used', 'used_unit', 'used_percentage', 'free', 'free_unit', 'free_percentage'],
+             'regexp': r'[cd]:\\ - total: ([\d.]+) (\w{2}) - used: ([\d.]+) (\w{2}) \((\d+)%\) - free ([\d.]+) (\w{2}) \((\d+)%\)'
+            },
+            {'properties': ['state', 'mount_point', 'free_space_in_mb', 'free_space_percentage', 'inode_percentage', 'mount_point2', 'free_space_in_mb2', 'free_space_percentage2', 'inode_percentage2'],
+             'regexp': r'DISK (OK|WARNING|CRITICAL) - free space: ([^\s]+) (\d+) MB \((\d+)% inode=(\d+)%\): ([^\s]+) (\d+) MB \((\d+)% inode=(\d+)%\):'
+            },
+            {'properties': ['state', 'mount_point', 'free_space_in_mb', 'free_space_percentage', 'inode_percentage'],
+             'regexp': r'DISK (OK|WARNING|CRITICAL) - free space: ([^\s]+) (\d+) MB \((\d+)% inode=(\d+)%\):'
+            },
          ]
         }
     ],
@@ -1037,29 +1068,33 @@ expressions = {
             {'properties': ['state', 'timeout'],
              'regexp': r'(ok|WARNING|CRITICAL) - Socket timeout after ([0-9]+) seconds'
             },
+            {'properties': ['ns_version', 'date'],
+             'regexp': r'NSClient\+\+ ([\d.]+) ([\d-]+)'
+            },
             {'properties' : [],
              'regexp': r'Connection refused'
             },
             {'properties': [],
              'regexp': r'could not fetch information from server'
             },
-            {'properties': ['load', 'time', 'resolution'],
-             'regexp': r'CPU Load (\d+)% \((\d+) (\w+) average\)'
+            {'properties': [],
+             'regexp': r'No data was received from host!'
             },
-            {'properties': ['total', 'total_unit', 'used', 'used_unit', 'used_percentage', 'free', 'free_unit', 'free_percentage'],
-             'regexp': r'Memory usage: total:([0-9.]+) (\w{2}) - used: ([0-9.]+) (\w{2}) \(([0-9]+)%\) - free: ([0-9.]+) (\w{2}) \(([0-9]+)%\)'
+            {'properties': [],
+             'regexp': r"NSClient - ERROR: Could not get data for 5 perhaps we don't collect data this far back"
             },
-            {'properties': ['total', 'total_unit', 'used', 'used_unit', 'used_percentage', 'free', 'free_unit', 'free_percentage'],
-             'regexp': r'c:\\ - total: ([\d.]+) (\w{2}) - used: ([\d.]+) (\w{2}) \((\d+)%\) - free ([\d.]+) (\w{2}) \((\d+)%\)'
+            {'properties': [],
+             'regexp': r"NSClient - ERROR: Could not get value"
             },
-            {'properties': ['day', 'hour', 'minute'],
-             'regexp': r'System Uptime - (\d+) day\(s\) (\d+) hour\(s\) (\d+) minute\(s\)'
+            {'properties': [],
+             'regexp': r"NSClient - ERROR: Failed to get PDH value."
+            },
+            {'properties': ['service','status'],
+             'regexp': r"(W3SVC|WCFMsmqServer.exe|inetinfo.exe|IISADMIN|CTF[Cc]onectorCtrl.exe|CTFclient): (Started|Running|Stopped|not running)"
             },
          ]
         }
     ],
-
-
 
     #changed
     'check_mysql': [
@@ -1239,12 +1274,9 @@ expressions = {
         {'labelFilter': None,
          'eventtype': 'Certificate',
          'regexps': [
-            {'properties': ['state', 'timestamp'],
+            {'properties': ['state', 'expiration_date'],
              'regexp': r'(OK|WARNING) - Certificate will expire on (.+)'
             },
-	    {'properties': [],
-	     'regexp': r'CRITICAL - Socket timeout after 10 seconds'
- 	    }
          ] 
         }
     ],
@@ -1256,9 +1288,6 @@ expressions = {
             {'properties': ['number_anonymous_users'],
              'regexp': r'CurrentAnonymousUsers=(\d+)'
             },
-            {'properties': [],
-             'regexp': r'CHECK_NRPE: Socket timeout after 10 seconds.'
-	    }
          ]
         }
     ],
@@ -1270,330 +1299,32 @@ expressions = {
          'regexps': [
             {'properties': ['number_connections'],
              'regexp': r'CurrentConnections=(\d+)'
-            },
-            {'properties': [],
-             'regexp': r'CHECK_NRPE: Socket timeout after 10 seconds.'
-	    }
+            },            
          ]
         }
     ],
 
-    'check_https': [
+    'check_msmq': [
         {'labelFilter': None,
-         'eventtype': 'HTTPS',
+         'eventtype': 'MSMQ',
          'regexps': [
-            {'properties': ['state', 'status', 'bytes', 'response_time'],
-             'regexp': r'HTTP (OK|WARNING): HTTP\/1.1 (\d+) OK - (\d+) bytes in ([0-9.]+) seconds? response time'
-            },
-            {'properties': [],
-             'regexp': r'CRITICAL - Socket timeout after 10 seconds'
-	    }
+            {'properties': ['state','path','num_msg_queue'],
+             'regexp': r'(OK|WARNING): \\MSMQ Queue\((.+)\)\\Messages in Queue: (\d+)'
+	        }
          ]
         }
     ],
 
-
-
-    ### STOPPED HERE ###
-    '''
-
-    'check_propel_pwas450': [
+    'check_whois': [
         {'labelFilter': None,
-         'eventtype': '',
+         'eventtype': 'WHOIS',
          'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
+            {'properties': ['state','domain','days_to_expiration','expiration_date'],
+             'regexp': r'(OK) - Dominio: ([\d\w\.]+) com ([\d\.]+) dias para expirar. Expires: (\d{8})'
+	        }
          ]
         }
     ],
-
-    'check_ldap_time54': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'http_regexp': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_fila_ldap': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_replica_ibest2': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_nrpe': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_local_users': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'https': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_local_disk': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_process_nossl': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_raid': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'https_args': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_ldap_time22': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_ft_status': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_disk_nossl': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_service_nossl': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_propel_7798': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_cputime_nossl': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_arp_snmp': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_cpu_snmp': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_snmp': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'http_args': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_rrdtraf': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_cns': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_nrpe_ssl': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_load_melig': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-
-    'check_mysql_melig': [
-        {'labelFilter': None,
-         'eventtype': '',
-         'regexps': [
-            {'properties': [],
-             'regexp': r''
-            }
-         ]
-        }
-    ],
-    ''': []
 }
 
 
@@ -1615,14 +1346,21 @@ errorRegexps = [
      'regexp' : r"(Connection refused)"
     },
     {'properties' : ['description'],
-     'regexp' : r"(Connection refused by host)"
+     'regexp' : r"(Connection refused by host)" 
     },
     {'properties' : ['description'],
      'regexp' : r'(CRITICAL - Socket timeout after .+ seconds)'
-    }
+    },
+    {'properties' : ['msg_source','timeout_seconds'],
+     'regexp' : r'([^:]+): Socket timeout after ([\d.]+) seconds.'
+    },
+    {'properties' : ['log_file'],
+     'regexp' : r'Could not construct return packet in NRPE handler check client side (\(.+\)) logs...'
+    },
+    {'properties': ['state', 'msg_source', 'unachievable_host_add'],
+     'regexp': r'(ERROR): (.+) : No response from remote host "([\d.]+)"\.'
+    },
 ]
-
-
 
 expressions['tcp'] = expressions['check_tcp']
 expressions['check_local_load'] = expressions['check_load']
@@ -1631,6 +1369,13 @@ expressions['https'] = expressions['http_args_follow']
 expressions['https_args'] = expressions['http_args_follow']
 expressions['http_regexp'] = expressions['http_args_follow']
 expressions['check_local_disk'] = expressions['check_disk']
+expressions['check_url'] = expressions['check_http']
+expressions['check_https'] = expressions['check_http']
+expressions['check_https']['eventtype'] = 'HTTPS'
 
-
+#This is a special case. Events in here are originated from a remote server
+#In order to have the correct event label, we use the specific events patterns
+#whenever possible (like check_cpu, for instance). Only specific network issues 
+#should be directly added to the check_nt patterns like a connection problem pattern
+expressions['check_nt'] += expressions['check_cpu'] + expressions['check_mem'] + expressions['check_disk'] + expressions['check_uptime']
 
