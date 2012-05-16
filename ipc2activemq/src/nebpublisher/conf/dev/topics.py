@@ -1360,7 +1360,7 @@ expressions['http_regexp'] = expressions['http_args_follow']
 expressions['check_local_disk'] = expressions['check_disk']
 expressions['check_url'] = expressions['check_http']
 expressions['check_https'] = expressions['check_http']
-expressions['check_https']['eventtype'] = 'HTTPS'
+expressions['check_https'][0]['eventtype'] = 'HTTPS'
 
 #This is a special case. Events in here are originated from a remote server
 #In order to have the correct event label, we use the specific events patterns
