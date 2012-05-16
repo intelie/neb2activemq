@@ -102,7 +102,7 @@ expressions = {
 			      {'properties': ['state', 'response_time', 'port'],
 			       'regexp': r'FTP (OK|WARNING|CRITICAL) - ([\d.]+) seconds* response time on port (\d+) .+'
 			      },
-			      {'properties': ['state', 'free_space', 'percentage_free_space', 'free_inode_percentage'],
+			      {'properties': ['state', 'path','free_space','percentage_free_space', 'free_inode_percentage'],
 			       'regexp': r'DISK (OK|WARNING|CRITICAL) - free space: (.+) (\d+) MB \((\d+)% inode=(\d+)%\)'
 			      },
 			      {'properties': ['state', 'packages_to_upgrade', 'critical_updates'],
@@ -482,9 +482,6 @@ expressions = {
             {'properties': ['state', 'response_time'],
              'regexp': r'SMTP (OK|WARNING|CRITICAL) - ([0-9.]+) sec. response time'
             },
-            {'properties': [],
-             'regexp': r'Service Check Timed Out'
-            }
          ]
         }
     ],
@@ -1065,14 +1062,8 @@ expressions = {
         {'labelFilter': None,
          'eventtype': 'NT',
          'regexps': [
-            {'properties': ['state', 'timeout'],
-             'regexp': r'(ok|WARNING|CRITICAL) - Socket timeout after ([0-9]+) seconds'
-            },
             {'properties': ['ns_version', 'date'],
              'regexp': r'NSClient\+\+ ([\d.]+) ([\d-]+)'
-            },
-            {'properties' : [],
-             'regexp': r'Connection refused'
             },
             {'properties': [],
              'regexp': r'could not fetch information from server'
@@ -1092,6 +1083,18 @@ expressions = {
             {'properties': ['service','status'],
              'regexp': r"(W3SVC|WCFMsmqServer.exe|inetinfo.exe|IISADMIN|CTF[Cc]onectorCtrl.exe|CTFclient): (Started|Running|Stopped|not running)"
             },
+	    {'properties': [],
+	     'regexp': r'CTFclient: Started'
+	    },
+	    {'properties': [],
+	     'regexp': r'CTFConectorCtrl.exe: Running'
+	    },
+	    {'properties': [],
+	     'regexp': r'IISADMIN: Started'
+	    },
+	    {'properties': [],
+	     'regexp': r'inetinfo.exe: Running'
+	    }
          ]
         }
     ],
@@ -1304,6 +1307,32 @@ expressions = {
         }
     ],
 
+    'check_https': [
+        {'labelFilter': None,
+         'eventtype': 'HTTPS',
+         'regexps': [
+            {'properties': ['state', 'status', 'bytes', 'response_time'],
+             'regexp': r'HTTP (OK|WARNING): HTTP\/1.1 (\d+) OK - (\d+) bytes in ([0-9.]+) seconds? response time'
+            },
+         ]
+        }
+    ],
+
+
+    'check_local_disk': [
+        {'labelFilter': None,
+         'eventtype': 'DISK',
+         'regexps': [
+	    {'properties': ['state', 'path', 'free_space','percentage_free_space', 'free_inode_percentage'],
+             'regexp': r'DISK (OK|WARNING|CRITICAL) - free space: (.+) (\d+) MB \((\d+)% inode=(\d+)%\)'
+            },
+	    {'properties': ['state', 'path', 'free_space', 'percentage_free_space', 'free_inode_percentage', 'path', 'free_space', 'percentage_free_space', 'free_inode_percentage'],
+	     'regexp': r'DISK (OK|WARNING|CRITICAL) - free space: (.+) (\d+) MB \((\d+)% inode=(\d+)%\): (.+) (\d+) MB \((\d+)% inode=(\d+)%\):'
+	    }
+         ]
+        }
+    ],
+
     'check_msmq': [
         {'labelFilter': None,
          'eventtype': 'MSMQ',
@@ -1348,8 +1377,8 @@ errorRegexps = [
     {'properties' : ['description'],
      'regexp' : r"(Connection refused by host)" 
     },
-    {'properties' : ['description'],
-     'regexp' : r'(CRITICAL - Socket timeout after .+ seconds)'
+    {'properties' : ['state','description'],
+     'regexp' : r'(WARNING|CRITICAL) - (Socket timeout after .+ seconds)'
     },
     {'properties' : ['msg_source','timeout_seconds'],
      'regexp' : r'([^:]+): Socket timeout after ([\d.]+) seconds.'
