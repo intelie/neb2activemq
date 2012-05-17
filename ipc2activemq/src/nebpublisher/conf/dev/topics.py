@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import copy
 
 expressions = {
 # new
@@ -1362,7 +1363,7 @@ expressions['https_args'] = expressions['http_args_follow']
 expressions['http_regexp'] = expressions['http_args_follow']
 expressions['check_local_disk'] = expressions['check_disk']
 expressions['check_url'] = expressions['check_http']
-expressions['check_https'] = expressions['check_http']
+expressions['check_https'] = copy.deepcopy(expressions['check_http'])
 expressions['check_https'][0]['eventtype'] = 'HTTPS'
 
 #This is a special case. Events in here are originated from a remote server
