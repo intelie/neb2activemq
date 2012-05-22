@@ -110,7 +110,7 @@ expressions = {
 			       'regexp': r'APT (OK|WARNING|CRITICAL): (\d+) packages available for upgrade \((\d+) critical updates\)'
 			      },
 			      {'properties': ['state', 'output'],
-			       'regexp': r'(OK|WARNING|CRITICAL): .+'
+			       'regexp': r'(OK|WARNING|CRITICAL): (.+)'
 			      },
 			      {'properties': ['state', 'processes'],
 			       'regexp': r'PROCS (OK|WARNING|CRITICAL): (\d+) processes'
@@ -180,7 +180,7 @@ expressions = {
 
 
     'check_ftp_args': [
-        {'eventtype': 'FTPArgs',
+        {'eventtype': 'FTP',
          'labelFilter': None,
          'regexps': [
             {'properties': ['state', 'response_time', 'port'],
@@ -201,31 +201,6 @@ expressions = {
          ]
         }
     ],
-
-
-    'check_http_jetty_admin': [
-        {'eventtype': 'HttpJettyAdmin',
-         'labelFilter': None,
-         'regexps': [
-            {'properties': ['state', 'version', 'status_code', 'status_description', 'bytes', 'response_time'],
-             'regexp': r'HTTP (OK|WARNING|CRITICAL): HTTP/([0-9.]+) ([0-9]{3}) (.+) - ([0-9]+) bytes in ([0-9.]+) second response time'
-            }
-         ]
-        }
-    ],
-
-
-    'check_http_jetty_igimoveis': [
-        {'eventtype': 'HttpJettyIgImoveis',
-         'labelFilter': None,
-         'regexps': [
-            {'properties': ['state', 'version', 'status_code', 'status_description', 'bytes', 'response_time'],
-             'regexp': r'HTTP (OK|WARNING|CRITICAL): HTTP/([0-9.]+) ([0-9]{3}) (.+) - ([0-9]+) bytes in ([0-9.]+) second response time'
-            }
-         ]
-        }
-    ],
-
 
     'check_jvm_wrapper': [
         {'eventtype': 'JVMWrapper',
@@ -637,20 +612,6 @@ expressions = {
         }
     ],
 
-    'check_http_solr': [
-        {'labelFilter': None,
-         'eventtype': 'HTTPSolr',
-         'regexps': [
-            {'properties': ['state', 'http_version', 'status_code', 'status_description', 'bytes', 'response_time'],
-             'regexp': r'HTTP (OK|WARNING|CRITICAL): HTTP\/([0-9.]+) ([0-9]{3}) (.+) - ([0-9]+) bytes in ([0-9.]+) second response time'
-            },
-            {'properties' : [],
-             'regexp': r'No route to host'
-            },
-         ]
-        }
-    ],
-
     'check_webinject': [
         {'labelFilter': None,
          'eventtype': 'WebInject',
@@ -801,11 +762,14 @@ expressions = {
              'regexp': r'HTTP (OK|WARNING|CRITICAL): HTTP/(\d+.\d+) (\d{3}) (.+) - (\d+) bytes in (\d+.\d+) second response time'
             },
             {'properties': ['state', 'status', 'bytes', 'response_time'],
-             'regexp': r'HTTP (OK|WARNING|CRITICAL): Status line output matched "([0-9]+)" - ([0-9]+) bytes in ([0-9.]+) second response time'}
+             'regexp': r'HTTP (OK|WARNING|CRITICAL): Status line output matched "([0-9]+)" - ([0-9]+) bytes in ([0-9.]+) second response time'
+            },
+            {'properties': ['url', 'state', 'status_description'],
+             'regexp': r'<A HREF="([^"]+)" target="_blank">HTTP (.+) - (.+)'
+            },
          ]
         }
     ],
-
 
     'check_ftp': [
         {'labelFilter': None,
@@ -839,7 +803,10 @@ expressions = {
          'eventtype' : 'Ping',
          'regexps': [
             {'properties': ['state', 'ip', 'loss', 'rta'],
-             'regexp': r"FPING (OK|WARNING|CRITICAL) - ([0-9.]+) \(loss=(\d+)%(?:(?:, rta=(\d+\.\d*) ms\))|())"
+             'regexp': r"FPING (OK|WARNING|CRITICAL) - ([0-9.]+) \(loss=([\d\.]+)%, rta=(\d+\.\d*) ms\)"
+            },
+            {'properties': ['state', 'ip', 'loss'],
+             'regexp': r"FPING (OK|WARNING|CRITICAL) - ([0-9.]+) \(loss=([\d\.]+)%\)"
             },
             {'properties': ['state', 'loss', 'rta'],
              'regexp': r"PING (OK|WARNING|CRITICAL) - Packet loss = ([0-9.]+)%, RTA = ([0-9.]+) ms"
@@ -922,7 +889,10 @@ expressions = {
          'eventtype': 'Ping',
          'regexps': [
             {'properties': ['state', 'ip', 'loss', 'rta'],
-             'regexp': r"FPING (OK|WARNING|CRITICAL) - ([0-9.]+) \(loss=(\d+)%(?:(?:, rta=(\d+\.\d*) ms\))|())"
+             'regexp': r"FPING (OK|WARNING|CRITICAL) - ([0-9.]+) \(loss=([\d\.]+)%, rta=(\d+\.\d*) ms\)"
+            },
+            {'properties': ['state', 'ip', 'loss'],
+             'regexp': r"FPING (OK|WARNING|CRITICAL) - ([0-9.]+) \(loss=([\d\.]+)%\)"
             }
          ]
         }
@@ -977,25 +947,6 @@ expressions = {
         }
     ],
 
-
-    'http_args_follow': [
-        {'labelFilter': None,
-         'eventtype': 'HTTP',
-         'regexps': [
-            {'properties': ['url', 'state', 'http_version', 'status_code', 'status_description', 'bytes', 'response_time'],
-             'regexp': r'<A HREF="([^"]+)" target="_blank">HTTP (.+): HTTP/([0-9.]+) ([0-9]+) (.+) - ([0-9]+) bytes in ([0-9.]+) second response time </A>'
-            },
-            {'properties': ['url', 'state', 'status_description'],
-             'regexp': r'<A HREF="([^"]+)" target="_blank">HTTP (.+) - (.+)'
-            },
-            {'properties': ['url', 'status_description'],
-             'regexp': r'<A HREF="([^"]+)" target="_blank">(Connection refused)'
-            },
-         ]
-        },
-    ],
-
-
     'check_disk': [
         {'labelFilter': None,
          'eventtype': 'Disk',
@@ -1042,7 +993,7 @@ expressions = {
 
     'check_nt': [
         {'labelFilter': None,
-         'eventtype': 'NT',
+         'eventtype': 'NSClient',
          'regexps': [
             {'properties': ['ns_version', 'date'],
              'regexp': r'NSClient\+\+ ([\d.]+) ([\d-]+)'
@@ -1280,17 +1231,6 @@ expressions = {
         }
     ],
 
-    'check_https': [
-        {'labelFilter': None,
-         'eventtype': 'HTTPS',
-         'regexps': [
-            {'properties': ['state', 'status', 'bytes', 'response_time'],
-             'regexp': r'HTTP (OK|WARNING): HTTP\/1.1 (\d+) OK - (\d+) bytes in ([0-9.]+) seconds? response time'
-            },
-         ]
-        }
-    ],
-
     'check_msmq': [
         {'labelFilter': None,
          'eventtype': 'MSMQ',
@@ -1352,19 +1292,26 @@ errorRegexps = [
     },
     {'properties': ['state','description'],
      'regexp': r"(WARNING|CRITICAL) - (Socket timeout)"
-    }
+    },
+    {'properties': ['url', 'status_description'],
+     'regexp': r'<A HREF="([^"]+)" target="_blank">(Connection refused)'
+    },
 ]
 
 expressions['tcp'] = expressions['check_tcp']
 expressions['check_local_load'] = expressions['check_load']
-expressions['http_args'] = expressions['http_args_follow']
-expressions['https'] = expressions['http_args_follow']
-expressions['https_args'] = expressions['http_args_follow']
-expressions['http_regexp'] = expressions['http_args_follow']
 expressions['check_local_disk'] = expressions['check_disk']
 expressions['check_url'] = expressions['check_http']
 expressions['check_https'] = copy.deepcopy(expressions['check_http'])
 expressions['check_https'][0]['eventtype'] = 'HTTPS'
+expressions['check_http_jetty_admin'] = expressions['check_http']
+expressions['check_http_jetty_igimoveis'] = expressions['check_http']
+expressions['check_http_solr'] = expressions['check_http']
+expressions['http_args_follow'] = expressions ['check_http']
+expressions['http_args'] = expressions['check_http']
+expressions['https'] = expressions['check_http']
+expressions['https_args'] = expressions['check_http']
+expressions['http_regexp'] = expressions['check_http']
 
 #This is a special case. Events in here are originated from a remote server
 #In order to have the correct event label, we use the specific events patterns
