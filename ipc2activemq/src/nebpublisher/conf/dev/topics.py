@@ -542,6 +542,9 @@ expressions = {
          'regexps': [
             {'properties': ['state'],
              'regexp': r'Solr (OK|WARNING|CRITICAL)'
+            },
+            {'properties': ['state','action','core','status'],
+             'regexp': r'(OK|WARNING|CRITICAL): (.+) - core ([^ ]+) (OK)'
             }
          ]
         }
@@ -766,6 +769,9 @@ expressions = {
             },
             {'properties': ['url', 'state', 'status_description'],
              'regexp': r'<A HREF="([^"]+)" target="_blank">HTTP (.+) - (.+)'
+            },
+            {'properties': ['state', 'certificate_expiration_date'],
+             'regexp': r'(OK|WARNING) - Certificate will expire on (.+)'
             },
          ]
         }
@@ -1014,7 +1020,7 @@ expressions = {
              'regexp': r"NSClient - ERROR: Failed to get PDH value."
             },
             {'properties': ['service','status'],
-             'regexp': r"([\S]+): (Started|Running|Stopped|not running)"
+             'regexp': r"(.+): (Started|Running|Stopped|not running)\s*\z"
             },
             {'properties': ['state'],
              'regexp': r"(OK): All processes are running."
@@ -1236,7 +1242,7 @@ expressions = {
          'eventtype': 'MSMQ',
          'regexps': [
             {'properties': ['state','path','num_msg_queue'],
-             'regexp': r'(OK|WARNING): \\MSMQ Queue\((.+)\)\\Messages in Queue: (\d+)'
+             'regexp': r'(OK|WARNING|CRITICAL): \\MSMQ Queue\((.+)\)\\Messages in Queue: (\d+)'
 	        }
          ]
         }
@@ -1258,7 +1264,7 @@ expressions = {
          'eventtype': 'LOCK',
          'regexps': [
             {'properties': ['lock_type'],
-             'regexp': r'\A([\S]+|OK - have fun)\s*\z'
+             'regexp': r'([\S]+|OK - have fun)\s*\z'
 	        }
          ]
         }
@@ -1354,6 +1360,9 @@ errorRegexps = [
     },
     {'properties': ['state', 'connection_not_established_time_window_in_secs'],
      'regexp': r'(CRITICAL) - connection could not be established within ([0-9.]+) seconds'
+    },
+    {'properties': ['description'],
+     'regexp': r'(\(No output returned from plugin\))'
     },
 ]
 
