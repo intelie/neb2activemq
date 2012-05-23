@@ -1252,6 +1252,62 @@ expressions = {
          ]
         }
     ],
+
+    'check_lock': [
+        {'labelFilter': None,
+         'eventtype': 'LOCK',
+         'regexps': [
+            {'properties': ['lock_type'],
+             'regexp': r'\A([\S]+|OK - have fun)\s*\z'
+	        }
+         ]
+        }
+    ],
+
+    'check_query': [
+        {'labelFilter': None,
+         'eventtype': 'Query',
+         'regexps': [
+            {'properties': ['state','count_query_args','count_result'],
+             'regexp': r'(OK) - select count(.+): ([0-9]+)'
+	        }
+         ]
+        }
+    ],
+
+    'check_query_web': [
+        {'labelFilter': None,
+         'eventtype': 'Query_Web',
+         'regexps': [
+            {'properties': ['state','query','result'],
+             'regexp': r'(OK|WARNING|CRITICAL) - (.+): ([0-9]+)'
+	        }
+         ]
+        }
+    ],
+
+    'check_query_duration': [
+        {'labelFilter': None,
+         'eventtype': 'Query_Duration',
+         'regexps': [
+            {'properties': ['state','query_duration_time'],
+             'regexp': r'(OK|WARNING|CRITICAL): Query duration=([0-9.]+) seconds.'
+	        }
+         ]
+        }
+    ],
+
+    'check_solr_jmx': [
+        {'labelFilter': None,
+         'eventtype': 'Solr',
+         'regexps': [
+            {'properties': ['jmx_result'],
+             'regexp': r'([0-9.]+)'
+	        }
+         ]
+        }
+    ],
+
 }
 
 
@@ -1296,6 +1352,9 @@ errorRegexps = [
     {'properties': ['url', 'status_description'],
      'regexp': r'<A HREF="([^"]+)" target="_blank">(Connection refused)'
     },
+    {'properties': ['state', 'connection_not_established_time_window_in_secs'],
+     'regexp': r'(CRITICAL) - connection could not be established within ([0-9.]+) seconds'
+    },
 ]
 
 expressions['tcp'] = expressions['check_tcp']
@@ -1312,6 +1371,7 @@ expressions['http_args'] = expressions['check_http']
 expressions['https'] = expressions['check_http']
 expressions['https_args'] = expressions['check_http']
 expressions['http_regexp'] = expressions['check_http']
+expressions['check_locks_db'] = expressions['check_lock']
 
 #This is a special case. Events in here are originated from a remote server
 #In order to have the correct event label, we use the specific events patterns
