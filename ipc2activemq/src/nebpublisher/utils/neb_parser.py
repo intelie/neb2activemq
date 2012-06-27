@@ -1,6 +1,7 @@
 import time, logging
 import re
 import sys
+import os
 
 
 NOT_IMPLEMENTED = 1
@@ -19,7 +20,37 @@ def count_not_none(groups) :
 
 
 class Parser():
-    def __init__ (self, topics, parser_functions):
+    def __init__ (self, topics, parser_functions, settings):
+        #Set to store the check types that were parsed during execution
+        self.checks_set = set()
+        
+        #Set to store the check types that did not have a match
+        self.no_match_checks_set = set()
+
+        #Boolean to indicate if the file containing messages with no match
+        #already reached the maximum size
+        self.max_msgs_file_size_reached = False
+
+        self.settings = settings        
+
+        #File to store the check types that were found
+        #The file is opened and closed each time it is used in order to avoid
+        #data loss caused by killing this process
+        self.check_types_file = open(self.settings.PROC_CHECK_TYPES_FILE, 'w')
+        self.check_types_file.close()
+
+        #File to store the check types that weren't registered
+        #The file is opened and closed each time it is used in order to avoid
+        #data loss caused by killing this process
+        self.not_reg_checks_file = open(self.settings.NOT_REGISTERED_CHECKS_FILE, 'w')        
+        self.not_reg_checks_file.close()
+
+        #File to store messages that did not match any regexp for its check type
+        #The file is opened and closed each time it is used in order to avoid
+        #data loss caused by killing this process
+        self.no_match_msgs_file = open(self.settings.NO_MATCH_MSGS_FILE, 'w')
+        self.no_match_msgs_file.close()
+
         self.load_types()
         self.topics = topics
         self.parser_functions = parser_functions
@@ -76,24 +107,31 @@ class Parser():
         data = []
         data = message.split('^')
 
-        if len(data) < 5:
+        if len(data) < 6:
             return BAD_FORMAT
 	
-	if not data[0] or not data[1] or not data[2] or not data[3] or not data[4]:
+	if not data[0] or not data[1] or not data[2] or not data[3] or not data[4] or not data[5]:
             return BAD_FORMAT	
 	
         host = data[0]
         command_name = data[1]
-        state = data[2]
-        downtime = data[3]
-        message = data[4]
+        service_description = data[2]
+        state = data[3]
+        downtime = data[4]
+        message = data[5]
 
-        logger.debug("Host %s - command_name %s - state %s - downtime %s - output %s" % \
-                     (host, command_name, state, downtime, message))
+        if command_name not in self.checks_set:
+            self.checks_set.add(command_name)
+            self.check_types_file = open(self.settings.PROC_CHECK_TYPES_FILE, 'a')        
+            self.check_types_file.write(command_name+'\n')
+            self.check_types_file.close()
+
+        logger.debug("Host %s - command_name %s - service description %s - state %s - downtime %s - output %s" % \
+                     (host, command_name, service_description, state, downtime, message))
 
         if command_name in self.topics.expressions:
             topic = self.topics.expressions[command_name]
-            result = self.create_event_from_regexp(host, downtime,  message, topic)
+            result = self.create_event_from_regexp(host, service_description, downtime,  message, topic, command_name)
             if result != BAD_FORMAT and result != NOT_IMPLEMENTED:
                 result['state'] = SERVICE_CHECK_MAP[int(state)]
                 return [result]
@@ -105,6 +143,13 @@ class Parser():
                 event['state'] = SERVICE_CHECK_MAP[int(state)]
             return events
 
+        #Check has no one to handle it
+        if command_name not in self.no_match_checks_set:
+            self.not_reg_checks_file = open(self.settings.NOT_REGISTERED_CHECKS_FILE, 'a')        
+            self.not_reg_checks_file.write(command_name + '\n')
+            self.not_reg_checks_file.close()
+            self.no_match_checks_set.add(command_name)    
+    
         logger.warn("Event type %s not registered as a topic" % command_name)
         return BAD_FORMAT
 
@@ -125,9 +170,11 @@ class Parser():
         state = data[1]
         downtime = data[2]
         output = data[3]
+        service_description = "Not available in this kind of check"
+        command_name = "Not available in this kind of check"
         #logger.debug("Host %s - state %s - downtime %i output %s" % (host, state, downtime, output) )
         topic = self.topics.expressions['host']
-        event = self.create_event_from_regexp(host, downtime, output, topic)
+        event = self.create_event_from_regexp(host, service_description, downtime, output, topic, command_name)
 
         if event != BAD_FORMAT and event != NOT_IMPLEMENTED:
             event['state'] = HOST_CHECK_MAP[int(state)]
@@ -135,9 +182,10 @@ class Parser():
         return event
 
 
-    def create_event_from_regexp(self, host, downtime, message, topic):
+    def create_event_from_regexp(self, host, service_description, downtime, message, topic, command_name):
         event = {'host' : host}
         event['downtime'] = downtime
+        event['service_description'] = service_description
         event['description'] = message
         logger.debug('Message to be matched: %s \n Topic: %s' % (message, str(topic)))
         match = False
@@ -178,6 +226,27 @@ class Parser():
         if match:
             return event
         else:
+            #The message didn't match any regexp
+
+            #Checking if the file containing the messages without matches was already
+            #marked as having reached the maximum allowed size
+            if not self.max_msgs_file_size_reached:
+
+                #Opening the file in append mode
+                self.no_match_msgs_file = open(self.settings.NO_MATCH_MSGS_FILE, 'a')
+
+                #Check if file has reached the maximum allowed size
+                if (os.fstat(self.no_match_msgs_file.fileno()).st_size < self.settings.NO_MATCH_MSGS_MAX_FILE_SIZE_IN_BYTES):
+                    #Not reached, writting message
+                    msg = 'Check: ' + command_name + ' ||| Service Description: ' + service_description + ' ||| Message: ' + message + '\n'
+                    self.no_match_msgs_file.write(msg)
+                else:
+                    #Has reached the limit, marking
+                    self.max_msgs_file_size_reached = True
+                    self.no_match_msgs_file.write('Max file size reached')
+                    
+                self.no_match_msgs_file.close()
+                
             logger.warn('No expression for: %s' %(message))
             return BAD_FORMAT
 

@@ -36,14 +36,23 @@ int statusOfCurrentMessage;
 
 /* variables for ipc */
 #define KEY 123456
+
+/*Increase this value during compilation if messages with more then 512 
+characters are expected. To do so, add the argument -DMSG_BUFFER_SIZE=<NEW_SIZE>
+to gcc, where <NEW_SIZE> is the desired new value of the buffer size in bytes*/
+#ifndef MSG_BUFFER_SIZE
+#define MSG_BUFFER_SIZE 2048
+#endif
+
 int msqid;
 struct my_msgbuf {
 	long mtype;
-	char mtext[512];
+	char mtext[MSG_BUFFER_SIZE];
 } buf; 
 
-/* used for logging*/
-char temp_buffer[1024];
+/* used for logging, should fit buf.mtext plus the extra overhead of 
+the logged message explanation*/
+char temp_buffer[MSG_BUFFER_SIZE+1024];
 
 /* user for comand_name copy */
 char command_name[1024];
@@ -77,7 +86,7 @@ int nebmodule_init(int flags, char *args, nebmodule *handle) {
 			"A Nagios Event Broker (NEB) module to integrate with activemq.");
 
 	/* log module info to the Nagios log file */
-	write_to_all_logs("neb2ipc: Copyright (c) 2009 Intelie", NSLOG_INFO_MESSAGE);
+	write_to_all_logs("neb2ipc: Copyright (c) 2012 Intelie", NSLOG_INFO_MESSAGE);
 
 	/* Example: log a message to the Nagios log file
 	temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
@@ -269,15 +278,15 @@ int neb2ipc_handle_data(int event_type, void *data) {
 
 				return 0;
 			}
-			
+
 			// If command_name comes null, search on service struct
 			if (scdata->command_name != NULL && strlen(scdata->command_name)
 					> 0) {
 				strcpy(command_name,scdata->command_name);
 			} else {
-				service *svc;
+                service *svc;				
 				if ((svc = find_service(scdata->host_name,
-						scdata->service_description)) == NULL) {
+						                scdata->service_description)) == NULL) {
 					snprintf(temp_buffer, sizeof(temp_buffer) - 1,
 							"Could not find service %s for host %s",
 							scdata->service_description, scdata->host_name);
@@ -321,38 +330,38 @@ int neb2ipc_handle_data(int event_type, void *data) {
 				#endif
 			}
 
-      if (scdata->host_name == NULL || strlen(scdata->host_name) == 0) {
-        snprintf(
+            if (scdata->host_name == NULL || strlen(scdata->host_name) == 0) {
+                snprintf(
 						temp_buffer,
 						sizeof(temp_buffer) - 1,
 						"Service check error: Missing host_name parameter");
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
-        statusOfCurrentMessage = ERROR_MISSING_PARAMETER;
+                statusOfCurrentMessage = ERROR_MISSING_PARAMETER;
 
 				return 0;
 			}
 
-      if (command_name == NULL || strlen(command_name) == 0) {
-        snprintf(
+            if (command_name == NULL || strlen(command_name) == 0) {
+                snprintf(
 						temp_buffer,
 						sizeof(temp_buffer) - 1,
 						"Service check error: Missing command_name parameter");
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
-        statusOfCurrentMessage = ERROR_MISSING_PARAMETER;
+                statusOfCurrentMessage = ERROR_MISSING_PARAMETER;
 
 				return 0;
 			}
 
-      if (scdata->output == NULL || strlen(scdata->output) == 0) {
-         snprintf(
+            if (scdata->output == NULL || strlen(scdata->output) == 0) {
+                snprintf(
 						temp_buffer,
 						sizeof(temp_buffer) - 1,
 						"Service check error: Missing output parameter");
 				temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
 				write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
-        statusOfCurrentMessage = ERROR_MISSING_PARAMETER;
+                statusOfCurrentMessage = ERROR_MISSING_PARAMETER;
 
 				return 0;
 			}
@@ -360,35 +369,35 @@ int neb2ipc_handle_data(int event_type, void *data) {
 			host *hst;
 			hst = find_host(scdata->host_name);
 			if (hst == NULL) {
-        snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%s^%i^%i^%s\0",
-				scdata->host_name, command_name, scdata->state,ERROR_FIND_HOST, scdata->output);
-        if (msgsnd(msqid, (struct buf *) &buf, sizeof(buf), IPC_NOWAIT) == -1) {
-				  snprintf(temp_buffer, sizeof(temp_buffer) - 1,
-						      "Error to send message to queue id %i: %s", msqid,
-						      strerror(errno));
-				  temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
-				  write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
-          statusOfCurrentMessage = ERROR_MESSAGE_NOT_SENT_AND_FIND_HOST_NULL;
+                snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%s^%s^%i^%i^%s\0",
+				         scdata->host_name, command_name, scdata->service_description, scdata->state,ERROR_FIND_HOST, scdata->output);
+                if (msgsnd(msqid, (struct buf *) &buf, sizeof(buf), IPC_NOWAIT) == -1) {
+				    snprintf(temp_buffer, sizeof(temp_buffer) - 1,
+						     "Error to send message to queue id %i: %s", msqid,
+						     strerror(errno));
+				    temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+				    write_to_all_logs(temp_buffer, NSLOG_RUNTIME_WARNING);
+                    statusOfCurrentMessage = ERROR_MESSAGE_NOT_SENT_AND_FIND_HOST_NULL;
 
-          return 0;
-			  }
+                    return 0;
+			    }
 
-        snprintf(temp_buffer, sizeof(temp_buffer) - 1, "find_host() returned null, sent anyway");
-     	  write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+                snprintf(temp_buffer, sizeof(temp_buffer) - 1, "find_host() returned null, sent anyway");
+     	        write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
 
-        statusOfCurrentMessage = ERROR_FIND_HOST_NULL;
-        return 0;
+                statusOfCurrentMessage = ERROR_FIND_HOST_NULL;
+                return 0;
 
 			}
 			#ifdef DEBUG
 			if (hst->scheduled_downtime_depth == HOST_DOWN) {
-			  snprintf(temp_buffer, sizeof(temp_buffer) - 1, "Host '%s' is currently in scheduled downtime\0" ,scdata->host_name);
-			  temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
-			  write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+			    snprintf(temp_buffer, sizeof(temp_buffer) - 1, "Host '%s' is currently in scheduled downtime\0" ,scdata->host_name);
+			    temp_buffer[sizeof(temp_buffer) - 1] = '\x0';
+			    write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
 			}
 			#endif
-			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%s^%i^%i^%s\0",
-					scdata->host_name, command_name, scdata->state, hst->scheduled_downtime_depth, scdata->output);
+			snprintf(buf.mtext, sizeof(buf.mtext) - 1, "%s^%s^%s^%i^%i^%s\0",
+					scdata->host_name, command_name, scdata->service_description, scdata->state, hst->scheduled_downtime_depth, scdata->output);
 
 			/* debug log*/
 			#ifdef DEBUG

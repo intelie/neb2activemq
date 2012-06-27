@@ -13,17 +13,17 @@ def send_message(mq, message):
         print "Queue is full, ignoring"
 
 def send_messages(mq, service_counter, status_counter, test_service,
-                  host='some_host'):
+                  host='some_host', fake_service_description='Test Service Description', fake_downtime=0):
     try:
         for key, item in test_service.iteritems():
             if type(item) == str:
                 #message = '%s^%s^%s^%s^0\0' % (host, key, status_counter, item)
-                message = '%s^%s^%s^%s\0' % (host, key, status_counter, item)
+                message = '%s^%s^%s^%s^%s^%s\0' % (host, key, fake_service_description, status_counter, fake_downtime, item)
                 send_message(mq, message)
             elif type(item) == list:
                 for msg in item:
                     #message = '%s^%s^%s^%s^0\0' % (host, key, status_counter, msg)
-                    message = '%s^%s^%s^%s\0' % (host, key, status_counter, msg)
+                    message = '%s^%s^%s^%s^%s^%s\0' % (host, key, fake_service_description, status_counter, fake_downtime, msg)
                     send_message(mq, message)
     except Exception as e:
         print "Caugh an unknown exception, ignoring.", e

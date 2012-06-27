@@ -10,9 +10,11 @@ import threading
 import socket
 import copy
 import json
+import traceback
+import signal
 from utils import neb_parser
 from connection_adapter import *
-import signal
+
 
 
 logger = logging.getLogger("nebpublisher.manager")
@@ -49,14 +51,14 @@ class Manager(object):
         #queue to send results to broker
         self.queue = Queue.Queue(settings.MAX_QUEUE_SIZE)
         try:
-            self.mq = sysv_ipc.MessageQueue(settings.OS_MQ_KEY)
+            self.mq = sysv_ipc.MessageQueue(settings.OS_MQ_KEY, max_message_size=settings.OS_MQ_MAX_MSG_SIZE)
         except sysv_ipc.ExistentialError:
             logger.error("Message queue does not exist for key %i . \
             Check if Nagios is using the same key and is running " % settings.OS_MQ_KEY)
             exit(1)
 
         #start execution
-        self.parser = neb_parser.Parser(self.topics, self.parser_functions)
+        self.parser = neb_parser.Parser(self.topics, self.parser_functions, self.settings)
         self.subscriber = Subscriber("subscriber", self.mq, settings,
                                      self.parser, self.queue)
         self.subscriber.start()
@@ -79,7 +81,7 @@ class Subscriber(threading.Thread):
     def run (self):
         while True:
             try:
-                logger.debug("Waiting for a OS message:")
+                logger.debug("Waiting for an OS message:")
 
                 #This reception blocks until some new message appears. Other option is to use flag IPC_NOWAIT
                 message, message_type = self.mq.receive()
@@ -96,6 +98,9 @@ class Subscriber(threading.Thread):
                         if event != neb_parser.NOT_IMPLEMENTED and event != neb_parser.BAD_FORMAT:
                             self.publish(event)
 
+                if events == neb_parser.BAD_FORMAT:
+                    logger.debug("Received a message with bad format: %s" % (message))
+
             except sysv_ipc.PermissionsError, sysv_ipc.ExistentialError:
                 logger.error("Message could not be received. Check if os queue exist and its permission")
                 time.sleep(self.settings.OS_MQ_SLEEP)
@@ -104,7 +109,7 @@ class Subscriber(threading.Thread):
                 logger.error("A severe error ocurred in os message queue. Aborting..")
                 exit(1)
             except Exception, e:
-                logger.error('Unknown exception %s' % str(sys.exc_info()))
+                logger.error('An unexpected error occurred.\nDetails:\n%s' % traceback.format_exc())
                 exit(1)
 
 
@@ -167,7 +172,7 @@ class QueueProcessor(object):
                         except:
                             err = "*can't convert message to string*"
                         logger.error("UnicodeDecodeError on Queuprocessor.process. \
-Discarding message. Exception: %s; Message: %s" %  (str(sys.exc_info()), err))
+Discarding message. Exception: %s; Message: %s" %  (traceback.format_exc(), err))
                         msg = None
                 finally:
                     if msg is not None:
@@ -186,6 +191,6 @@ Discarding message. Exception: %s; Message: %s" %  (str(sys.exc_info()), err))
                 self.connection = ConnectionAdapter(self.settings.BROKER,
                         self.settings.CONN_SLEEP_DELAY)
             except Exception, e:
-                logger.error('Unknown exception %s' % str(sys.exc_info()))
+                logger.error('An unexpected error occurred.\nDetails:\n%s' % traceback.format_exc())
                 #TODO: Maybe retry
                 continue

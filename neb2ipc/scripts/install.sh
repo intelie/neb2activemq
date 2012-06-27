@@ -69,7 +69,7 @@ sudo ${NAGIOS_DAEMON} restart
 
 
 #SIMPLE CHECK IF IT WAS SUCCESSFUL
-QUEUE_EXISTS=`sudo ipcs | grep "0x0001e240.*nagios"` 
+QUEUE_EXISTS=`sudo ipcs -q | grep -P "0x0001e240.*nagios"` 
 if [ -n "$QUEUE_EXISTS" ]
 then
   echo "[MESSAGE QUEUE CREATED SUCCESSFULLY!]"
