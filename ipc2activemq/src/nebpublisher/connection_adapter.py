@@ -22,7 +22,7 @@ class ConnectionAdapter(object):
     def send(self, message, headers={}, **keyword_headers):
         try:
             self.conn.send(message, headers, **keyword_headers)
-        except stomp.internal.exception.NotConnectedException:
+        except stomp.NotConnectedException:
             logger.error("Lost connection with %s. Trying to reconnect." % \
                          self.broker)
             time.sleep(self.conn_sleep_delay)
