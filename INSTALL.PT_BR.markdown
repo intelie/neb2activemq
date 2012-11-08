@@ -98,7 +98,6 @@ Obs: se os valores padrão dos diretórios do Nagios não correspondem ao seu am
     ------ Message Queues --------
     key        msqid      owner      perms      used-bytes   messages
     0x0001e240 32768      nagios     600        0            0
-
 ```
 
 * Caso o ipc2activemq esteja rodando corretamente, aparecerão linhas como estas abaixo no terminal:
