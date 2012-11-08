@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ENV=dev
+ENV=prod
 
 DAEMON=ipc2activemq.py
 NAME=nebpublisher

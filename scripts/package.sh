@@ -24,6 +24,7 @@ rm -rf *.tar.gz
 cd ..
 mkdir -p neb2activemq/scripts
 cp ../scripts/install.sh neb2activemq/scripts/
+cp ../*.markdown neb2activemq
 
 cp -r neb2ipc ipc2activemq neb2activemq
 tar -czvf neb2activemq-1.1.6.tar.gz neb2activemq
