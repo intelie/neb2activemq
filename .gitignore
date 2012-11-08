@@ -3,3 +3,7 @@
 *.pyc
 *.swp
 ipc2activemq/src/nebpublisher/conf/dev/c
+ipc2activemq/src/.project
+ipc2activemq/src/.pydevproject
+ipc2activemq/src/.settings
+
