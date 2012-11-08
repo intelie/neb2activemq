@@ -6,4 +6,8 @@ ipc2activemq/src/nebpublisher/conf/dev/c
 ipc2activemq/src/.project
 ipc2activemq/src/.pydevproject
 ipc2activemq/src/.settings
+dist/
+ipc2activemq/dist/
+neb2ipc/dist/
+
 
