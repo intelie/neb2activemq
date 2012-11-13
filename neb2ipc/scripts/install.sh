@@ -30,7 +30,7 @@ make
 if [ -f neb2ipc.o ]
 then
   echo "[Moving object neb2ipc.o]"
-  sudo -u nagios cp neb2ipc.o $NAGIOS_BIN
+  cp neb2ipc.o $NAGIOS_BIN
 else
   echo "[File neb2ipc.o not found]"
   echo "[ABORTING]"
