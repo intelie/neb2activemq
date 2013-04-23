@@ -110,7 +110,7 @@ class Parser():
         if len(data) < 6:
             return BAD_FORMAT
 	
-	if not data[0] or not data[1] or not data[2] or not data[3] or not data[4] or not data[5]:
+	if data[0] == '' or data[1] == '' or data[2] == '' or data[3] == '' or data[4] == '' or data[5] == '':
             return BAD_FORMAT	
 	
         host = data[0]
