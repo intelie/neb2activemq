@@ -41,10 +41,10 @@ class ConnectionAdapter(object):
         """
         connection = stomp.Connection(self.broker, prefer_localhost=False,
                                       try_loopback_connect=False,
-                                      user = user
-                                      passcode = passcode,
-                                      use_ssl = use_ssl
-                                      ssl_ca_certs = ssl_ca_certs)
+                                      user = self.user
+                                      passcode = self.passcode,
+                                      use_ssl = self.use_ssl
+                                      ssl_ca_certs = self.ssl_ca_certs)
         connection.set_listener('', ErrorListener(connection))
         connection.start()
         connection.connect()
