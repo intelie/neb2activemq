@@ -7,6 +7,10 @@ from nebpublisher import logger, utils
 
 #Main settings
 BROKER = [('localhost', 61613)] # Message Broker Target
+BROKER_USER = 'system'
+BROKER_PASS = 'manager
+BROKER_SSL = True
+BROKER_SSL_TRUST = None
 CONN_SLEEP_DELAY = 3 # Time to way after a connection was lost
 MAX_QUEUE_SIZE = 100 # Max queue size. If equals to 0, queue is unbound!
 QUEUE_SLEEP_TIME = 3 # Time to wait if queue is empty

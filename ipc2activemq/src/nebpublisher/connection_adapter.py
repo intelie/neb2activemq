@@ -13,9 +13,13 @@ class ConnectionAdapter(object):
     """
       Adapter to send messages to ActiveMQ through STOMP.
     """
-    def __init__(self, broker, conn_sleep_delay):
+    def __init__(self, broker, user, passcode, use_ssl, ssl_ca_certs, conn_sleep_delay):
         self.broker = broker
         self.conn_sleep_delay = conn_sleep_delay
+        self.user = user
+        self.passcode = passcode
+        self.use_ssl = use_ssl
+        self.ssl_ca_certs = ssl_ca_certs
         self.__connect()
 
 
@@ -36,7 +40,11 @@ class ConnectionAdapter(object):
         if some of them are offline.
         """
         connection = stomp.Connection(self.broker, prefer_localhost=False,
-                                      try_loopback_connect=False)
+                                      try_loopback_connect=False,
+                                      user = user
+                                      passcode = passcode,
+                                      use_ssl = use_ssl
+                                      ssl_ca_certs = ssl_ca_certs)
         connection.set_listener('', ErrorListener(connection))
         connection.start()
         connection.connect()

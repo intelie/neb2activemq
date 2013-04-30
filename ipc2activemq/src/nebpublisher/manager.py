@@ -136,6 +136,10 @@ class QueueProcessor(object):
     def __init__(self, queue, settings):
         self.queue = queue
         self.connection = ConnectionAdapter(settings.BROKER,
+                                            settings.BROKER_USER,
+                                            settings.BROKER_PASS,
+                                            settings.BROKER_SSL,
+                                            settings.BROKER_SSL_TRUST,
                                             settings.CONN_SLEEP_DELAY)
         self.settings = settings
 
